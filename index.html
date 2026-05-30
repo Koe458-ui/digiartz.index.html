@@ -491,7 +491,10 @@
       applyBg();showToast('Background updated ✦');
     }catch(err){showToast('Error: '+err.message);}
   }
-  function applyBg(){const b=document.getElementById('heroBg');b.style.backgroundImage=cfg.hero_bg?`url('${cfg.hero_bg}')`:'none';}
+  function applyBg(){
+  document.getElementById('heroBg').style.backgroundImage =
+    "url('YOUR_IMAGE_URL_HERE')";
+  }
 
   function openUp(){
     if(!sb){showToast('Configure Supabase first');return;}
