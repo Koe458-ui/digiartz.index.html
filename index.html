@@ -215,7 +215,11 @@
     .gHdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:.3rem;flex-wrap:wrap;gap:1rem;}
     .upBtn{padding:.65rem 1.3rem;border:1px solid var(--bdr);background:transparent;color:var(--txd);font-family:var(--fm);font-size:.6rem;letter-spacing:.18em;cursor:pointer;display:flex;align-items:center;gap:.5rem;transition:all .3s;}
     .upBtn:hover{border-color:var(--pg);color:var(--ps);background:var(--pdim);}
-    .gGrid{column-count:4;column-gap:.8rem;}
+    /* Admin-only upload button: hidden by default, shown only when body.admin */
+    body.admin .adminOnly{display:flex !important;}
+    /* Keep homeGrid hidden — data source only for Full Gallery overlay */
+    .gGrid{display:none;}
+    #homeScrollSentinel{display:none;}
     .gItem{break-inside:avoid;margin-bottom:.8rem;position:relative;cursor:pointer;overflow:hidden;background:var(--sur);border:1px solid var(--bdr);transition:border-color .3s,transform .3s;}
     .gItem:hover{border-color:var(--bdrh);transform:translateY(-3px);}
     .gItem img{width:100%;display:block;aspect-ratio:1;object-fit:cover;transition:transform .4s;}
@@ -608,35 +612,63 @@
   </div>
   <!-- FEATURED SHOWCASE HTML END -->
 
-  <section class="sec" id="gallery" style="padding-top:4rem;">
-   <div class="gHdr">
-    <div>
-     <div class="secT">
-      GALLERY
-      <span class="s">
-       ✦
-      </span>
-     </div>
-     <div class="secSub">
-      EXPLORE MY LATEST ARTWORK
-     </div>
+  <!-- GALLERY CAROUSEL START -->
+  <div id="homeGrid" style="display:none;"></div>
+  <div id="homeScrollSentinel" style="display:none;"></div>
+  <section id="gallery" style="padding:4rem 0 3rem;overflow:hidden;">
+    <div class="fsHdr" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div class="secT">GALLERY <span class="s">✦</span></div>
+        <div class="secSub">EXPLORE MY LATEST ARTWORK</div>
+      </div>
+      <!-- ADMIN UPLOAD BUTTON — only visible when body.admin -->
+      <button class="upBtn adminOnly" onclick="openUp()" style="display:none;">↑ UPLOAD ART</button>
     </div>
-    <button class="upBtn" onclick="openUp()">
-     ↑ UPLOAD ART
-    </button>
-   </div>
-   <div class="gGrid" id="homeGrid">
-   </div>
-   <!-- INFINITE SCROLL START -->
-   <div id="homeScrollSentinel">
-   </div>
-   <!-- INFINITE SCROLL END -->
-   <div class="gMore">
-    <button class="btnG" onclick="openFG()">
-     VIEW MORE ✦
-    </button>
-   </div>
+    <div class="fsCarousel" id="galCarousel">
+      <div class="fsTrack" id="galTrack"></div>
+    </div>
+    <div id="galEmpty" style="display:none;padding:3rem 2rem;text-align:center;font-family:var(--fm);font-size:.7rem;letter-spacing:.2em;color:var(--txd);">NO ARTWORK YET</div>
   </section>
+  <!-- GALLERY CAROUSEL END -->
+  <!-- CHARACTERS SECTION START -->
+  <section id="secCharacters" style="padding:3rem 0 3rem;overflow:hidden;">
+    <div class="fsHdr">
+      <div class="secT">CHARACTERS <span class="s">✦</span></div>
+      <div class="secSub">ORIGINAL CHARACTERS, ANIME FAN ART, PORTRAITS, AND CHARACTER ILLUSTRATIONS.</div>
+    </div>
+    <div class="fsCarousel" id="charCarousel">
+      <div class="fsTrack" id="charTrack"></div>
+    </div>
+    <div id="charEmpty" style="display:none;padding:3rem 2rem;text-align:center;font-family:var(--fm);font-size:.7rem;letter-spacing:.2em;color:var(--txd);">NO CHARACTER ARTWORK YET</div>
+  </section>
+  <!-- CHARACTERS SECTION END -->
+
+  <!-- LANDSCAPE SECTION START -->
+  <section id="secLandscape" style="padding:3rem 0 3rem;overflow:hidden;">
+    <div class="fsHdr">
+      <div class="secT">LANDSCAPE <span class="s">✦</span></div>
+      <div class="secSub">SCENERY, ENVIRONMENTS, NATURE STUDIES, BACKGROUNDS, AND WORLD-BUILDING ARTWORK.</div>
+    </div>
+    <div class="fsCarousel" id="landCarousel">
+      <div class="fsTrack" id="landTrack"></div>
+    </div>
+    <div id="landEmpty" style="display:none;padding:3rem 2rem;text-align:center;font-family:var(--fm);font-size:.7rem;letter-spacing:.2em;color:var(--txd);">NO LANDSCAPE ARTWORK YET</div>
+  </section>
+  <!-- LANDSCAPE SECTION END -->
+
+  <!-- SKETCH SECTION START -->
+  <section id="secSketch" style="padding:3rem 0 3rem;overflow:hidden;">
+    <div class="fsHdr">
+      <div class="secT">SKETCH <span class="s">✦</span></div>
+      <div class="secSub">PRACTICE SKETCHES, LINE ART, CONCEPTS, ROUGH IDEAS, AND WORK-IN-PROGRESS DRAWINGS.</div>
+    </div>
+    <div class="fsCarousel" id="sketchCarousel">
+      <div class="fsTrack" id="sketchTrack"></div>
+    </div>
+    <div id="sketchEmpty" style="display:none;padding:3rem 2rem;text-align:center;font-family:var(--fm);font-size:.7rem;letter-spacing:.2em;color:var(--txd);">NO SKETCH ARTWORK YET</div>
+  </section>
+  <!-- SKETCH SECTION END -->
+
   <section id="about" style="padding:5rem 2rem;max-width:1200px;margin:0 auto;">
    <div class="secT" style="margin-bottom:.3rem;">
     ABOUT
@@ -954,16 +986,11 @@
   let homeScrollObserver = null;
 
   function renderHome(){
+    /* Rebuild all gallery carousels from current images array */
+    if(window.rebuildGalCarousels) window.rebuildGalCarousels(images);
+    /* Keep homeGrid and infinite scroll sentinel for legacy FG overlay compatibility */
     const g=document.getElementById('homeGrid');
-    homePageOffset = 0;
-    if(!images.length){
-      g.innerHTML='<p style="font-family:var(--fm);font-size:.7rem;letter-spacing:.2em;color:var(--txd);padding:2rem 0;">NO ARTWORK YET</p>';
-      return;
-    }
-    const firstBatch = images.slice(0, HOME_BATCH_SIZE);
-    g.innerHTML = firstBatch.map(itemHTML).join('');
-    homePageOffset = firstBatch.length;
-    initHomeScrollObserver();
+    if(g) g.innerHTML = images.map(itemHTML).join('');
   }
 
   function appendHomeItems(){
@@ -1204,6 +1231,199 @@ function closeMenu(){
     await loadDB();
     applyBg();renderHome();renderAbout();renderSoc();
   })();
+
+  /* ═══════════════════════════════════════════════════════════
+     GALLERY CAROUSEL JAVASCRIPT
+     Reusable carousel engine — powers Main Gallery, Characters,
+     Landscape, and Sketch sections.
+     ═══════════════════════════════════════════════════════════ */
+  (function(){
+
+    /* ── Generic carousel factory ──
+       Creates an auto-scroll + drag/swipe carousel identical to
+       Featured Showcase for any trackEl.
+       Returns { rebuild } so data can be refreshed after DB load. */
+    function makeCarousel(trackEl, viewerEl, viewerImgEl, speed){
+      speed = speed || 0.55;
+      var pos = 0, curSpeed = speed, raf = null;
+      var paused = false;
+      var dragging = false, dragX0 = 0, dragPos0 = 0;
+      var dragMoved = false, velocity = 0;
+      var lastDragX = 0, lastDragT = 0, momentumTimer = null;
+      var origCount = 0;
+
+      function singleWidth(){
+        var first = trackEl.querySelector('.fsItem');
+        if(!first) return 1;
+        var style = window.getComputedStyle(trackEl);
+        var gap = parseFloat(style.gap || style.columnGap || '12');
+        return (first.offsetWidth + gap) * origCount;
+      }
+      function normPos(p){ var sw = singleWidth(); p = p % sw; if(p < 0) p += sw; return p; }
+      function applyTf(){ trackEl.style.transform = 'translateX(' + (-pos) + 'px)'; }
+
+      function tick(){
+        if(!paused && !dragging){ pos = normPos(pos + curSpeed); applyTf(); }
+        raf = requestAnimationFrame(tick);
+      }
+
+      function openViewer(src){
+        if(!viewerEl || !viewerImgEl) return;
+        viewerImgEl.src = src;
+        viewerEl.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        paused = true;
+      }
+      function closeViewer(){
+        if(!viewerEl || !viewerImgEl) return;
+        viewerEl.classList.remove('open');
+        document.body.style.overflow = '';
+        paused = false;
+        viewerImgEl.src = '';
+      }
+
+      function onDragStart(cx){
+        dragging = true; dragMoved = false;
+        dragX0 = cx; dragPos0 = pos;
+        velocity = 0; lastDragX = cx; lastDragT = Date.now();
+        if(momentumTimer){ clearTimeout(momentumTimer); momentumTimer = null; }
+        trackEl.style.transition = 'none';
+      }
+      function onDragMove(cx){
+        if(!dragging) return;
+        var dx = cx - dragX0;
+        if(Math.abs(dx) > 3) dragMoved = true;
+        var now = Date.now(), dt = now - lastDragT || 1;
+        velocity = (lastDragX - cx) / dt * 16;
+        lastDragX = cx; lastDragT = now;
+        pos = normPos(dragPos0 - dx); applyTf();
+      }
+      function onDragEnd(){
+        if(!dragging) return;
+        dragging = false;
+        curSpeed = Math.max(-4, Math.min(4, velocity));
+        momentumTimer = setTimeout(function(){ curSpeed = speed; momentumTimer = null; }, 1200);
+      }
+
+      trackEl.addEventListener('mousedown', function(e){ onDragStart(e.clientX); });
+      document.addEventListener('mousemove', function(e){ onDragMove(e.clientX); });
+      document.addEventListener('mouseup', onDragEnd);
+      trackEl.addEventListener('touchstart', function(e){ onDragStart(e.touches[0].clientX); }, {passive:true});
+      document.addEventListener('touchmove', function(e){ if(dragging) onDragMove(e.touches[0].clientX); }, {passive:true});
+      document.addEventListener('touchend', onDragEnd);
+      trackEl.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+      if(viewerEl){
+        document.addEventListener('keydown', function(e){
+          if(e.key === 'Escape' && viewerEl.classList.contains('open')){ closeViewer(); }
+        });
+        viewerEl.addEventListener('click', function(e){ if(e.target === viewerEl) closeViewer(); });
+        var vx = viewerEl.querySelector('.fsVwrX');
+        if(vx) vx.addEventListener('click', closeViewer);
+      }
+
+      raf = requestAnimationFrame(tick);
+
+      /* Build items from artwork array, filtered by category (null = all) */
+      function rebuild(artworks, catFilter){
+        /* Clear existing items */
+        trackEl.innerHTML = '';
+        origCount = 0;
+        var list = catFilter
+          ? artworks.filter(function(a){ return (a.category||'').toLowerCase() === catFilter.toLowerCase(); })
+          : artworks;
+
+        if(!list.length) return false; /* signal: empty */
+
+        /* Build original items */
+        list.forEach(function(art){
+          var item = document.createElement('div');
+          item.className = 'fsItem';
+          var src = art.image_url || '';
+          item.setAttribute('data-src', src);
+
+          var img = document.createElement('img');
+          img.src = getThumbnailUrl(src);
+          img.alt = art.name || '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.draggable = false;
+
+          var ov = document.createElement('div');
+          ov.className = 'fsItemOv';
+          ov.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+
+          item.appendChild(img);
+          item.appendChild(ov);
+          item.style.cursor = 'pointer';
+          item.addEventListener('click', (function(s){ return function(){ if(!dragMoved){ openViewer(s); } }; })(src));
+          trackEl.appendChild(item);
+          origCount++;
+        });
+
+        /* Duplicate for seamless loop */
+        var origItems = trackEl.querySelectorAll('.fsItem');
+        origItems.forEach(function(orig){
+          var clone = orig.cloneNode(true);
+          clone.classList.add('fsClone');
+          var s2 = orig.getAttribute('data-src') || '';
+          clone.addEventListener('click', (function(s){ return function(){ if(!dragMoved){ openViewer(s); } }; })(s2));
+          trackEl.appendChild(clone);
+        });
+
+        pos = 0; applyTf();
+        return true; /* signal: has items */
+      }
+
+      return { rebuild: rebuild, closeViewer: closeViewer };
+    }
+
+    /* ── Shared viewer for all gallery carousels ──
+       Reuse the existing #fsViewer to keep one overlay for everything */
+    var sharedViewer    = document.getElementById('fsViewer');
+    var sharedViewerImg = document.getElementById('fsViewerImg');
+
+    /* ── Instantiate all carousels ── */
+    var galTrack    = document.getElementById('galTrack');
+    var charTrack   = document.getElementById('charTrack');
+    var landTrack   = document.getElementById('landTrack');
+    var sketchTrack = document.getElementById('sketchTrack');
+
+    var galCar    = makeCarousel(galTrack,    sharedViewer, sharedViewerImg, 0.55);
+    var charCar   = makeCarousel(charTrack,   sharedViewer, sharedViewerImg, 0.50);
+    var landCar   = makeCarousel(landTrack,   sharedViewer, sharedViewerImg, 0.45);
+    var sketchCar = makeCarousel(sketchTrack, sharedViewer, sharedViewerImg, 0.60);
+
+    /* ── Expose rebuild function for use after DB loads ── */
+    window.rebuildGalCarousels = function(artworks){
+      /* Main gallery: all artworks */
+      var galHas = galCar.rebuild(artworks, null);
+      document.getElementById('galEmpty').style.display  = galHas  ? 'none' : 'block';
+      document.getElementById('galCarousel').style.display = galHas ? '' : 'none';
+
+      /* Characters: filter by "characters" category */
+      var charHas = charCar.rebuild(artworks, 'characters');
+      document.getElementById('charEmpty').style.display  = charHas  ? 'none' : 'block';
+      document.getElementById('charCarousel').style.display = charHas ? '' : 'none';
+
+      /* Landscape: filter by "landscapes" category */
+      var landHas = landCar.rebuild(artworks, 'landscapes');
+      document.getElementById('landEmpty').style.display  = landHas  ? 'none' : 'block';
+      document.getElementById('landCarousel').style.display = landHas ? '' : 'none';
+
+      /* Sketch: filter by "sketches" category */
+      var sketchHas = sketchCar.rebuild(artworks, 'sketches');
+      document.getElementById('sketchEmpty').style.display  = sketchHas  ? 'none' : 'block';
+      document.getElementById('sketchCarousel').style.display = sketchHas ? '' : 'none';
+    };
+
+    /* Build with empty data initially — will be rebuilt after DB loads */
+    window.rebuildGalCarousels([]);
+
+  })();
+  /* ═══════════════════════════════════════════════════════════
+     END GALLERY CAROUSEL JAVASCRIPT
+     ═══════════════════════════════════════════════════════════ */
 
   /* ═══════════════════════════════════════════════════════════
      FEATURED SHOWCASE JAVASCRIPT
