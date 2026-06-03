@@ -1021,23 +1021,20 @@
     </div>
     <img alt="preview" class="upPrev" id="upPrev" src=""/>
     <input class="mIn" id="upNm" placeholder="ARTWORK NAME" type="text"/>
-    <select class="mIn" id="upCat" style="appearance:none;-webkit-appearance:none;cursor:pointer;">
-     <option value="others">
-      OTHERS
-     </option>
-     <option value="cars">
-      CARS
-     </option>
-     <option value="characters">
-      CHARACTERS
-     </option>
-     <option value="landscapes">
-      LANDSCAPES
-     </option>
-     <option value="sketches">
-      SKETCHES
-     </option>
-    </select>
+    <!-- MULTI-CATEGORY SELECT START -->
+    <div id="upCatWrap" style="background:var(--sur2);border:1px solid var(--bdr);padding:.6rem .8rem;margin-bottom:.8rem;transition:border-color .25s;">
+      <div style="font-family:var(--fm);font-size:.55rem;letter-spacing:.15em;color:var(--txd);margin-bottom:.5rem;">CATEGORIES (SELECT ONE OR MORE)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.55rem;" id="upCatBoxes">
+        <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:var(--txd);"><input type="checkbox" value="others"     id="upCat_others"     onchange="updateUpCatDisplay()" checked style="accent-color:var(--pg);cursor:pointer;"> OTHERS</label>
+        <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:var(--txd);"><input type="checkbox" value="cars"       id="upCat_cars"       onchange="updateUpCatDisplay()"        style="accent-color:var(--pg);cursor:pointer;"> CARS</label>
+        <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:var(--txd);"><input type="checkbox" value="characters" id="upCat_characters" onchange="updateUpCatDisplay()"        style="accent-color:var(--pg);cursor:pointer;"> CHARACTERS</label>
+        <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:var(--txd);"><input type="checkbox" value="landscapes" id="upCat_landscapes" onchange="updateUpCatDisplay()"        style="accent-color:var(--pg);cursor:pointer;"> LANDSCAPES</label>
+        <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:var(--txd);"><input type="checkbox" value="sketches"   id="upCat_sketches"   onchange="updateUpCatDisplay()"        style="accent-color:var(--pg);cursor:pointer;"> SKETCHES</label>
+      </div>
+      <!-- Selected category display section -->
+      <div id="upCatDisplay" style="margin-top:.55rem;min-height:1.4rem;display:flex;flex-wrap:wrap;gap:.3rem;"></div>
+    </div>
+    <!-- MULTI-CATEGORY SELECT END -->
     <button class="mBtn" id="upBtn" onclick="doUp()">
      ADD TO GALLERY ✦
     </button>
@@ -1142,7 +1139,7 @@
     /* Use loading="lazy" for native browser lazy loading.
        data-fullsrc stores the original URL for lightbox use only. */
     return`<div class="gItem" onclick="openLB('${fullSrc}','${esc(img.name)}')" data-fullsrc="${fullSrc}">
-      <div class="cBadge">${esc(img.category||'others')}</div>
+      <div class="cBadge">${(img.category||'others').split(',').map(c=>esc(c.trim())).join(' · ')}</div>
       <button class="gDel" onclick="delImg('${esc(String(img.id))}','${esc(img.storage_path||'')}',event)" title="Delete">✕</button>
       <img src="${thumbSrc}" alt="${esc(img.name)}" loading="lazy" decoding="async">
       <div class="gOv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
@@ -1202,7 +1199,7 @@
     const srt=document.getElementById('fgSrt').value;
     const c=document.getElementById('fgC');
     let imgs=[...images];
-    if(cat!=='all')imgs=imgs.filter(i=>i.category===cat);
+    if(cat!=='all')imgs=imgs.filter(i=>(i.category||'others').split(',').map(s=>s.trim()).includes(cat));
     if(q)imgs=imgs.filter(i=>i.name.toLowerCase().includes(q));
     imgs.sort((a,b)=>srt==='new'?new Date(b.created_at)-new Date(a.created_at):new Date(a.created_at)-new Date(b.created_at));
     if(!imgs.length){c.innerHTML='<div class="fgEmp">NO ARTWORK FOUND</div>';return;}
@@ -1280,20 +1277,35 @@
     }
   })();
 
+  function updateUpCatDisplay(){
+    const disp=document.getElementById('upCatDisplay');
+    if(!disp)return;
+    const selected=[...document.querySelectorAll('#upCatBoxes input[type=checkbox]:checked')].map(cb=>cb.value);
+    if(!selected.length){disp.innerHTML='<span style="font-family:var(--fm);font-size:.55rem;letter-spacing:.1em;color:var(--txd);opacity:.5;">NONE SELECTED</span>';return;}
+    disp.innerHTML=selected.map(v=>`<span style="display:inline-flex;align-items:center;padding:.15rem .45rem;background:color-mix(in srgb,var(--tc) 12%,transparent);border:1px solid color-mix(in srgb,var(--tc) 35%,transparent);font-family:var(--fm);font-size:.5rem;letter-spacing:.1em;color:var(--ps);">${v.toUpperCase()}</span>`).join('');
+  }
+
   function openUp(){
     if(!sb){showToast('Configure Supabase first');return;}
     if(!isAdm){openPW();sessionStorage.setItem('pendUp','1');return;}
     resetUp();document.getElementById('upMod').classList.add('open');
   }
   function closeUp(){document.getElementById('upMod').classList.remove('open');upFile=null;}
-  function resetUp(){document.getElementById('upNm').value='';document.getElementById('upCat').value='others';document.getElementById('upPrev').style.display='none';upFile=null;}
+  function resetUp(){
+    document.getElementById('upNm').value='';
+    document.querySelectorAll('#upCatBoxes input[type=checkbox]').forEach(cb=>{cb.checked=cb.value==='others';});
+    updateUpCatDisplay();
+    document.getElementById('upPrev').style.display='none';
+    upFile=null;
+  }
   function handleFile(e){
     const f=e.target.files[0];if(!f)return;upFile=f;
     const r=new FileReader();r.onload=ev=>{const p=document.getElementById('upPrev');p.src=ev.target.result;p.style.display='block';if(!document.getElementById('upNm').value.trim())document.getElementById('upNm').value=f.name.replace(/\.[^.]+$/,'');};r.readAsDataURL(f);
   }
   async function doUp(){
     const nm=document.getElementById('upNm').value.trim();
-    const cat=document.getElementById('upCat').value;
+    const cats=[...document.querySelectorAll('#upCatBoxes input[type=checkbox]:checked')].map(cb=>cb.value);
+    const cat=cats.length?cats.join(','):'others';
     if(!upFile){showToast('Select an image');return;}
     if(!nm){showToast('Enter a name');return;}
     const btn=document.getElementById('upBtn');btn.textContent='UPLOADING…';btn.disabled=true;
