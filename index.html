@@ -466,6 +466,119 @@
       .aIn{padding-left:1.2rem;}
     }
 
+    /* ── COMMENTS SECTION ── */
+    #commentsPage{
+      position:fixed;inset:0;z-index:500;
+      background:var(--bg);
+      display:flex;flex-direction:column;
+      transform:translateX(100%);
+      transition:transform .45s cubic-bezier(.22,1,.36,1);
+    }
+    #commentsPage.open{transform:translateX(0);}
+
+    /* Header bar */
+    .cpHdr{
+      position:sticky;top:0;z-index:10;
+      background:rgba(5,3,8,.96);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--bdr);
+      padding:1rem 1.5rem;
+      display:flex;align-items:center;gap:.8rem;
+      flex-shrink:0;
+    }
+    .cpX{background:none;border:none;color:var(--txd);cursor:pointer;font-size:1.3rem;line-height:1;transition:color .2s,transform .2s;flex-shrink:0;padding:.2rem .4rem;}
+    .cpX:hover{color:var(--pg);transform:translateX(-3px);}
+    .cpTitle{font-family:var(--fd);font-size:1.1rem;font-weight:700;letter-spacing:.15em;color:var(--tx);display:flex;align-items:center;gap:.4rem;}
+    .cpTitle .s{color:var(--pg);font-size:.6em;}
+
+    /* Comments list area */
+    .cpBody{
+      flex:1;
+      overflow-y:auto;
+      padding:1.5rem 1.5rem 80px;
+    }
+    @media(max-width:640px){.cpBody{padding:1rem 1rem 80px;}}
+
+    /* Placeholder */
+    .cpEmpty{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;min-height:200px;
+      gap:.8rem;
+      font-family:var(--fm);font-size:.65rem;letter-spacing:.2em;color:var(--txd);
+      text-align:center;
+      padding:3rem 2rem;
+    }
+    .cpEmpty .cpEIco{font-size:2rem;color:color-mix(in srgb,var(--tc) 40%,transparent);}
+
+    /* Individual comment */
+    .cpComment{
+      display:flex;gap:.9rem;
+      padding:.9rem 0;
+      border-bottom:1px solid var(--bdr);
+    }
+    .cpComment:last-child{border-bottom:none;}
+    .cpAvatar{
+      width:34px;height:34px;border-radius:50%;
+      background:color-mix(in srgb,var(--tc) 22%,transparent);
+      border:1px solid var(--bdrh);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--fd);font-size:.85rem;font-weight:700;
+      color:var(--ps);flex-shrink:0;
+    }
+    .cpCommentMeta{display:flex;flex-direction:column;gap:.2rem;flex:1;min-width:0;}
+    .cpCommentUser{font-family:var(--fm);font-size:.6rem;letter-spacing:.15em;color:var(--ps);}
+    .cpCommentText{font-family:var(--fb);font-size:.9rem;color:var(--tx);line-height:1.6;word-break:break-word;}
+    .cpCommentTime{font-family:var(--fm);font-size:.52rem;letter-spacing:.1em;color:var(--txd);}
+
+    /* Fixed bottom composer — hidden by default, shown via JS when page opens */
+    .cpBar{
+      position:fixed;bottom:0;left:0;right:0;
+      z-index:501;
+      background:rgba(5,3,8,.97);
+      border-top:1px solid var(--bdrh);
+      backdrop-filter:blur(16px);
+      padding:.75rem 1.2rem;
+      display:none;
+      align-items:center;gap:.75rem;
+    }
+    .cpBarAvatar{
+      width:36px;height:36px;border-radius:50%;flex-shrink:0;
+      background:color-mix(in srgb,var(--tc) 22%,transparent);
+      border:1px solid var(--bdrh);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--fd);font-size:.9rem;font-weight:700;color:var(--ps);
+    }
+    .cpBarInput{
+      flex:1;
+      background:var(--sur2);
+      border:1px solid var(--bdr);
+      color:var(--tx);
+      font-family:var(--fb);font-size:.9rem;
+      padding:.6rem .9rem;
+      outline:none;
+      transition:border-color .25s;
+      min-width:0;
+    }
+    .cpBarInput:focus{border-color:var(--pg);}
+    .cpBarInput::placeholder{color:var(--txd);opacity:.5;font-style:italic;}
+    .cpBarSend{
+      flex-shrink:0;
+      padding:.6rem 1.1rem;
+      background:color-mix(in srgb,var(--tc) 14%,transparent);
+      border:1px solid var(--pg);
+      color:var(--ps);
+      font-family:var(--fm);font-size:.6rem;letter-spacing:.18em;
+      cursor:pointer;transition:all .25s;
+      white-space:nowrap;
+    }
+    .cpBarSend:hover{background:color-mix(in srgb,var(--tc) 28%,transparent);box-shadow:0 0 18px color-mix(in srgb,var(--tc) 30%,transparent);}
+    .cpBarSend:active{transform:scale(.97);}
+    @media(max-width:480px){
+      .cpBarSend{padding:.6rem .8rem;font-size:.55rem;letter-spacing:.1em;}
+      .cpBar{padding:.6rem .9rem;gap:.55rem;}
+    }
+    }
+
     /* CONNECT */
     #connect{padding:4rem 2rem;text-align:center;max-width:1200px;margin:0 auto;}
     .cDiv{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:2.5rem;}
@@ -652,7 +765,113 @@
       cursor:pointer;transition:color .2s;z-index:701;
     }
     .fsVwrX:hover{color:var(--pg);}
-  </style>
+  
+/* IMAGE LINKED COMMENTS PATCH */
+.cpSelectedImage{
+display:none;
+align-items:flex-start;
+justify-content:flex-start;
+padding:.4rem 0 .45rem;
+margin:0;
+}
+.cpSelectedImage img{
+width:90px;
+height:90px;
+object-fit:cover;
+border:1px solid var(--bdr);
+}
+.cpThumbWrap{
+position:relative;
+display:inline-block;
+}
+.cpThumbPreview{
+width:90px;
+height:90px;
+object-fit:cover;
+border:1px solid var(--bdr);
+box-shadow:0 0 15px color-mix(in srgb,var(--tc) 20%,transparent);
+background:var(--sur);
+}
+.cpThumbClose{
+position:absolute;
+top:-8px;
+right:-8px;
+width:22px;
+height:22px;
+border:1px solid var(--bdrh);
+background:var(--sur2);
+color:var(--ps);
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+@media(max-width:640px){
+.cpThumbPreview,
+.cpSelectedImage img{
+width:80px;
+height:80px;
+}
+}
+
+.cpPhoto{width:90px;height:90px;object-fit:cover;cursor:pointer;flex-shrink:0;border:1px solid var(--bdr);}
+.cpMissing{width:90px;height:90px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bdr);font-size:.55rem;text-align:center;}
+
+
+
+/* LIGHTBOX ACTION BUTTONS UPGRADE */
+.lbActions{
+width:100%;
+display:flex;
+gap:12px;
+align-items:stretch;
+justify-content:stretch;
+margin-top:.25rem;
+}
+.lbActionBtn{
+flex:1;
+min-height:52px;
+padding:.85rem 1rem;
+border:1px solid var(--pg);
+background:color-mix(in srgb,var(--tc) 8%,transparent);
+color:var(--tx);
+font-family:var(--fm);
+font-size:.7rem;
+letter-spacing:.2em;
+cursor:pointer;
+transition:all .3s;
+display:flex;
+align-items:center;
+justify-content:center;
+text-transform:uppercase;
+}
+.lbActionBtn:hover{
+background:color-mix(in srgb,var(--tc) 20%,transparent);
+border-color:var(--pb);
+box-shadow:0 0 30px color-mix(in srgb,var(--tc) 30%,transparent);
+transform:translateY(-2px);
+}
+.lbActionBtn:active{
+transform:translateY(0) scale(.98);
+}
+.lbIn{
+width:min(90vw,1000px);
+}
+.lbNm{
+width:100%;
+text-align:center;
+}
+@media(max-width:640px){
+.lbActions{
+flex-direction:row;
+width:100%;
+}
+.lbActionBtn{
+min-height:56px;
+}
+}
+
+</style>
  </head>
  <body>
   <div id="intro">
@@ -727,6 +946,11 @@
      <span class="smCIco">✦</span>OTHERS
     </button>
     <div class="smDiv"></div>
+    <!-- Comments -->
+    <button class="smItem" onclick="smOpenComments()">
+     <span class="smIco">◎</span>COMMENTS
+    </button>
+    <div class="smDiv"></div>
     <!-- About -->
     <button class="smItem" onclick="smGoAbout()">
      <span class="smIco">◈</span>ABOUT
@@ -735,6 +959,11 @@
     <!-- Contact -->
     <button class="smItem" onclick="smGoContact()">
      <span class="smIco">◉</span>CONTACT
+    </button>
+    <div class="smDiv"></div>
+    <!-- Login / Logout -->
+    <button class="smItem" id="smLoginBtn" onclick="smHandleAuth()">
+     <span class="smIco" id="smLoginIco">⊕</span><span id="smLoginLbl">LOGIN</span>
     </button>
    </div>
    <!-- Admin pinned at bottom -->
@@ -1051,6 +1280,50 @@
     <button class="fltDone" onclick="applyFilters()">DONE ✦</button>
    </div>
   </div>
+  <!-- ═══════════════════════════════════════════════
+       COMMENTS PAGE
+       ═══════════════════════════════════════════════ -->
+  <div id="commentsPage">
+    <!-- Header -->
+    <div class="cpHdr">
+      <button class="cpX" onclick="closeComments()" aria-label="Close comments">←</button>
+      <div class="cpTitle">COMMENTS <span class="s">✦</span></div>
+    </div>
+
+    
+
+    <!-- Comments list -->
+    <div class="cpBody" id="cpBody">
+      <!-- Placeholder — no comments yet -->
+      <div class="cpEmpty" id="cpEmpty">
+        <div class="cpEIco">◎</div>
+        <div>NO COMMENTS YET</div>
+        <div style="font-size:.55rem;opacity:.6;margin-top:.2rem;">BE THE FIRST TO LEAVE ONE</div>
+      </div>
+      <!-- Dynamically added comments will go here -->
+    </div>
+  </div>
+
+  <!-- Fixed comment composer bar (shown only when comments page is open) -->
+  <div class="cpBar" id="cpBar">
+    <div class="cpComposerWrap" style="width:100%;display:flex;flex-direction:column;gap:6px;">
+      <div class="cpSelectedImage" id="cpSelectedImage" style="display:none;border-bottom:1px solid var(--bdr);padding:0 0 6px 0;margin:0;">
+        <div class="cpThumbWrap">
+          <img id="cpSelectedImageImg" class="cpThumbPreview" src="" alt="">
+          <button class="cpThumbClose" onclick="hideCommentThumbnail()">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div class="cpBarAvatar" id="cpBarAvatar">?</div>
+        <input class="cpBarInput" id="cpBarInput" type="text" placeholder="Comment here..." maxlength="500" autocomplete="off"/>
+        <button class="cpBarSend" id="cpBarSend" onclick="cpSend()">SEND ✦</button>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════════
+       END COMMENTS PAGE
+       ═══════════════════════════════════════════════ -->
+
   <div id="lb" onclick="closeLB()">
    <button class="lbX" onclick="closeLB()">
     ✕
@@ -1083,6 +1356,19 @@
     <button class="mBtn sec" onclick="closePW()">
      CANCEL
     </button>
+   </div>
+  </div>
+  <!-- LOGIN MODAL -->
+  <div class="mOvr" id="authMod">
+   <div class="modal">
+    <button class="mX" onclick="closeAuthMod()">✕</button>
+    <h2>LOGIN</h2>
+    <input class="mIn" id="authUser" placeholder="USERNAME" type="text" autocomplete="username"/>
+    <input class="mIn" id="authEmail" placeholder="EMAIL" type="email" autocomplete="email"/>
+    <input class="mIn" id="authPass" placeholder="PASSWORD" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()"/>
+    <div class="mErr" id="authErr"></div>
+    <button class="mBtn" id="authBtn" onclick="doAuth()">LOGIN ✦</button>
+    <button class="mBtn sec" onclick="closeAuthMod()">CANCEL</button>
    </div>
   </div>
   <!-- UPLOAD MODAL -->
@@ -1324,7 +1610,7 @@
   }
   function openFG(){document.getElementById('fg').classList.add('open');document.body.style.overflow='hidden';renderFG();}
   function closeFG(){document.getElementById('fg').classList.remove('open');document.body.style.overflow='';}
-  function openLB(src,name){document.getElementById('lbImg').src=src;document.getElementById('lbNm').textContent=name;document.getElementById('lb').classList.add('open');document.body.style.overflow='hidden';}
+  function openLB(src,name){currentLightboxImageSrc=src;document.getElementById('lbImg').src=src;document.getElementById('lbNm').textContent=name;document.getElementById('lb').classList.add('open');document.body.style.overflow='hidden';}
   function closeLB(){document.getElementById('lb').classList.remove('open');document.body.style.overflow='';}
 
   function renderAbout(){if(cfg.about)document.getElementById('aTxt').innerHTML=esc(cfg.about).replace(/\n/g,'<br>');}
@@ -1348,6 +1634,111 @@
   function populateAdm(){
     /* About and Let's Connect removed from admin panel — edit from code only */
   }
+
+  /* ══════════════════════════════════════════════════════════
+     SUPABASE USER AUTH — Login / Logout
+     Uses Supabase email+password auth.
+     Session is persisted automatically via localStorage so the
+     user stays logged in after a page refresh.
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── State ── */
+  var authUser = null; /* null = logged out, object = logged in */
+
+  /* ── Sync the menu button label ── */
+  function syncAuthBtn() {
+    var lbl = document.getElementById('smLoginLbl');
+    var ico = document.getElementById('smLoginIco');
+    if (!lbl) return;
+    if (authUser) {
+      lbl.textContent = 'LOGOUT';
+      if (ico) ico.textContent = '⊗';
+    } else {
+      lbl.textContent = 'LOGIN';
+      if (ico) ico.textContent = '⊕';
+    }
+  }
+
+  /* ── Open / close modal ── */
+  function openAuthMod() {
+    document.getElementById('authUser').value  = '';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPass').value  = '';
+    var err = document.getElementById('authErr');
+    err.textContent = ''; err.classList.remove('show');
+    document.getElementById('authMod').classList.add('open');
+    setTimeout(function(){ document.getElementById('authEmail').focus(); }, 120);
+  }
+  function closeAuthMod() {
+    document.getElementById('authMod').classList.remove('open');
+  }
+
+  /* ── Menu button handler ── */
+  function smHandleAuth() {
+    if (authUser) {
+      /* Logged in → sign out */
+      if (sb) {
+        sb.auth.signOut().then(function(){ showToast('Signed out'); }).catch(function(e){ showToast('Error: ' + e.message); });
+      }
+    } else {
+      /* Logged out → open login modal */
+      closeMenu();
+      openAuthMod();
+    }
+  }
+
+  /* ── Perform login ── */
+  async function doAuth() {
+    if (!sb) { showToast('Supabase not configured'); return; }
+    var email = document.getElementById('authEmail').value.trim();
+    var pass  = document.getElementById('authPass').value;
+    var err   = document.getElementById('authErr');
+
+    if (!email) { err.textContent = 'Please enter your email.'; err.classList.add('show'); return; }
+    if (!pass)  { err.textContent = 'Please enter your password.'; err.classList.add('show'); return; }
+
+    var btn = document.getElementById('authBtn');
+    btn.textContent = 'SIGNING IN…'; btn.disabled = true;
+    err.textContent = ''; err.classList.remove('show');
+
+    try {
+      var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+      if (result.error) throw result.error;
+      /* onAuthStateChange fires automatically — it will close the modal & sync the button */
+    } catch (e) {
+      err.textContent = e.message || 'Login failed. Check your credentials.';
+      err.classList.add('show');
+    } finally {
+      btn.textContent = 'LOGIN ✦'; btn.disabled = false;
+    }
+  }
+
+  /* ── Listen for auth state changes (login / logout / refresh) ── */
+  if (sb) {
+    sb.auth.onAuthStateChange(function(event, session) {
+      authUser = session ? session.user : null;
+      syncAuthBtn();
+      if (event === 'SIGNED_IN') {
+        closeAuthMod();
+        showToast('Signed in ✦');
+      }
+      if (event === 'SIGNED_OUT') {
+        syncAuthBtn();
+      }
+    });
+
+    /* Restore session on page load (keeps user logged in after refresh) */
+    sb.auth.getSession().then(function(res) {
+      if (res.data && res.data.session) {
+        authUser = res.data.session.user;
+        syncAuthBtn();
+      }
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     END SUPABASE USER AUTH
+     ══════════════════════════════════════════════════════════ */
 
   async function handleBg(e){
     const f=e.target.files[0];if(!f||!sb)return;
@@ -1457,7 +1848,7 @@
 
   let tT;
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3000);}
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();closeAuthMod();}});
 
   /* ── HAMBURGER MENU ── */
   function toggleMenu(){
@@ -1498,6 +1889,247 @@ function closeMenu(){
       openPW();
     }
   }
+
+  /* ══════════════════════════════════════════════
+     COMMENTS PAGE
+     ══════════════════════════════════════════════ */
+  var cpComments = [];   /* in-memory comment list (UI only) */
+
+  function cpGetAvatarLetter(){
+    /* Use logged-in username initial, or '?' if not logged in */
+    if(authUser){
+      /* Prefer display_name metadata, else email prefix */
+      var name = (authUser.user_metadata && authUser.user_metadata.username)
+               || (authUser.user_metadata && authUser.user_metadata.name)
+               || (authUser.email ? authUser.email.split('@')[0] : '');
+      return name ? name.charAt(0).toUpperCase() : '?';
+    }
+    return '?';
+  }
+
+  function cpGetDisplayName(){
+    if(authUser){
+      return (authUser.user_metadata && authUser.user_metadata.username)
+          || (authUser.user_metadata && authUser.user_metadata.name)
+          || (authUser.email ? authUser.email.split('@')[0] : 'User');
+    }
+    return 'Guest';
+  }
+
+  function cpSyncAvatar(){
+    var av = document.getElementById('cpBarAvatar');
+    if(av) av.textContent = cpGetAvatarLetter();
+  }
+
+  
+let currentLightboxImageSrc='';
+
+function hideCommentThumbnail(){
+  var box=document.getElementById('cpSelectedImage');
+  if(box) box.style.display='none';
+}
+
+async function openComments(){
+    closeMenu();
+    document.getElementById('commentsPage').classList.add('open');
+    await cpLoadComments();
+    document.getElementById('cpBar').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    cpSyncAvatar();
+    var thumb=document.getElementById('cpSelectedImage');
+    var thumbImg=document.getElementById('cpSelectedImageImg');
+    if(currentLightboxImageSrc && thumb && thumbImg){
+      thumbImg.src=currentLightboxImageSrc;
+      thumb.style.display='flex';
+    }
+    /* Focus input after transition */
+    setTimeout(function(){ var inp=document.getElementById('cpBarInput'); if(inp) inp.focus(); }, 420);
+  }
+
+  function closeComments(){
+    document.getElementById('commentsPage').classList.remove('open');
+    document.getElementById('cpBar').style.display = 'none';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  }
+
+  function smOpenComments(){ openComments(); }
+
+  function cpRender(){
+    var body  = document.getElementById('cpBody');
+    var empty = document.getElementById('cpEmpty');
+    if(!body) return;
+
+    /* Remove existing rendered comments (keep #cpEmpty) */
+    body.querySelectorAll('.cpComment').forEach(function(el){ el.remove(); });
+
+    if(cpComments.length === 0){
+      if(empty) empty.style.display = 'flex';
+      return;
+    }
+    if(empty) empty.style.display = 'none';
+
+    cpComments.forEach(function(c){
+      var div = document.createElement('div');
+      div.className = 'cpComment' + (c.image_url ? ' hasImage' : '');
+      /* Show image thumbnail if comment has an image_url */
+      var thumbHtml = '';
+      if(c.image_url){
+        var safeUrl = esc(c.image_url);
+        thumbHtml = '<img class="cpPhoto" src="' + safeUrl + '" alt="linked image" onclick="openLB(\'' + safeUrl.replace(/'/g,'&#39;') + '\',\'linked image\')">';
+      }
+      div.innerHTML =
+        thumbHtml +
+        '<div class="cpAvatar">' + esc(c.initial) + '</div>' +
+        '<div class="cpCommentMeta">' +
+          '<div class="cpCommentUser">' + esc(c.user) + '</div>' +
+          '<div class="cpCommentText">' + esc(c.text) + '</div>' +
+          '<div class="cpCommentTime">' + esc(c.time) + '</div>' +
+        '</div>';
+      body.appendChild(div);
+    });
+
+    /* Newest-first — scroll to top */
+    body.scrollTop = 0;
+  }
+
+  async function cpSend(){
+    var inp=document.getElementById('cpBarInput');
+    var text=inp?inp.value.trim():'';
+    if(!text) return;
+
+    if(!authUser){
+      showToast('Please login to comment.');
+      return;
+    }
+
+    const ok=await cpSaveComment(text);
+    if(!ok) return;
+
+    if(inp) inp.value='';
+    await cpLoadComments();
+  }
+
+  /* Allow Enter key to send */
+  document.addEventListener('DOMContentLoaded', function(){
+    var inp = document.getElementById('cpBarInput');
+    if(inp){
+      inp.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); cpSend(); }
+      });
+    }
+  });
+
+  /* Also attach after script runs (in case DOM is already ready) */
+  (function(){
+    var inp = document.getElementById('cpBarInput');
+    if(inp){
+      inp.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); cpSend(); }
+      });
+    }
+  })();
+
+  /* Close comments on Escape (piggybacks existing keydown listener) */
+  /* (existing listener already calls closeComments via closeMenu chain — add explicit) */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      closeComments();
+    }
+  });
+  /* ──────────────────────────────────────────────
+     cpLoadComments — fetch comments from Supabase
+     Ordered newest-first. Guests can read.
+     ────────────────────────────────────────────── */
+  async function cpLoadComments(){
+    if(!sb){
+      cpComments = [];
+      cpRender();
+      return;
+    }
+    try{
+      /* Show subtle loading state on first open */
+      var emptyEl = document.getElementById('cpEmpty');
+      if(emptyEl && cpComments.length === 0){
+        emptyEl.innerHTML = '<div class="cpEIco">◎</div><div>LOADING…</div>';
+        emptyEl.style.display = 'flex';
+      }
+      var result = await sb.from('comments')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if(result.error) throw result.error;
+      var rows = result.data || [];
+      cpComments = rows.map(function(row){
+        var displayName = row.user_email ? row.user_email.split('@')[0] : 'User';
+        return {
+          initial   : displayName.charAt(0).toUpperCase(),
+          user      : displayName,
+          text      : row.comment_text || '',
+          time      : row.created_at
+            ? new Date(row.created_at).toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' })
+            : '',
+          image_url : row.image_url || null
+        };
+      });
+      /* Restore empty placeholder text */
+      if(emptyEl){
+        emptyEl.innerHTML = '<div class="cpEIco">◎</div><div>NO COMMENTS YET</div><div style="font-size:.55rem;opacity:.6;margin-top:.2rem;">BE THE FIRST TO LEAVE ONE</div>';
+      }
+      cpRender();
+    }catch(e){
+      console.error('cpLoadComments:', e);
+      showToast('Failed to load comments');
+      cpComments = [];
+      cpRender();
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+     cpSaveComment — insert one comment into Supabase
+     Returns true on success, false on failure.
+     ────────────────────────────────────────────── */
+  async function cpSaveComment(text){
+    if(!sb){ showToast('Supabase not configured'); return false; }
+    if(!authUser){ showToast('Please login to comment.'); openAuthMod(); return false; }
+
+    /* Gather optional linked image URL from the thumbnail preview */
+    var imageUrl = null;
+    var thumbEl  = document.getElementById('cpSelectedImage');
+    var thumbImg = document.getElementById('cpSelectedImageImg');
+    if(thumbEl && thumbEl.style.display !== 'none' && thumbImg && thumbImg.src && thumbImg.src !== window.location.href){
+      imageUrl = thumbImg.src;
+    }
+
+    /* Disable Send while saving */
+    var sendBtn = document.getElementById('cpBarSend');
+    if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = '…'; }
+
+    try{
+      var result = await sb.from('comments').insert({
+        user_id      : authUser.id,
+        user_email   : authUser.email,
+        comment_text : text,
+        image_url    : imageUrl
+      });
+      if(result.error) throw result.error;
+      /* Clear thumbnail after successful insert */
+      if(thumbEl)  thumbEl.style.display = 'none';
+      if(thumbImg) thumbImg.src = '';
+      currentLightboxImageSrc = '';
+      return true;
+    }catch(e){
+      console.error('cpSaveComment:', e);
+      showToast('Error: ' + (e.message || 'Could not save comment'));
+      return false;
+    }finally{
+      if(sendBtn){ sendBtn.disabled = false; sendBtn.textContent = 'SEND ✦'; }
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     END COMMENTS PAGE
+     ══════════════════════════════════════════════ */
 
   function spawnPts(){const c=document.getElementById('iPts');for(let i=0;i<28;i++){const s=document.createElement('span');s.style.left=Math.random()*100+'%';s.style.top=(40+Math.random()*40)+'%';s.style.animationDuration=(1.5+Math.random()*1.5)+'s';s.style.animationDelay=(Math.random()*2)+'s';c.appendChild(s);}}
 
@@ -2028,5 +2660,54 @@ function closeMenu(){
  <!-- ════════════════════════════════════════════════════════
       END GLOBAL RIPPLE EFFECT
       ════════════════════════════════════════════════════════ -->
- </body>
+ <div id="cpSelectedImage" class="cpSelectedImage"></div><script>
+/* IMAGE LINKED COMMENTS PATCH — UI helpers only; Supabase handled in main script */
+
+/* commentCurrentImage: called when user clicks "Comment" on a gallery image.
+   Sets the thumbnail context and opens the comments panel. */
+function commentCurrentImage(imageId, imageUrl){
+  currentLightboxImageSrc = imageUrl || '';
+  openComments();
+}
+</script>
+<script>
+/* LIGHTBOX ACTION BUTTONS — inject Download + Comment buttons into the lightbox */
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var lbIn = document.querySelector('.lbIn');
+    if(lbIn && !document.getElementById('commentFromImageBtn')){
+      var actions = document.createElement('div');
+      actions.className = 'lbActions';
+      actions.innerHTML =
+        '<button class="lbActionBtn" id="downloadImageBtn">DOWNLOAD</button>' +
+        '<button class="lbActionBtn" id="commentFromImageBtn">COMMENT</button>';
+      lbIn.appendChild(actions);
+
+      document.getElementById('commentFromImageBtn').onclick = function(){
+        /* Capture the currently open lightbox image as the comment thumbnail */
+        var img = document.querySelector('.lbIn img');
+        currentLightboxImageSrc = (img && img.src) ? img.src : '';
+        /* Close lightbox */
+        document.getElementById('lb').classList.remove('open');
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        /* Open comments with the thumbnail pre-populated */
+        openComments();
+      };
+
+      document.getElementById('downloadImageBtn').onclick = function(){
+        var img = document.querySelector('.lbIn img');
+        if(!img || !img.src) return;
+        var a = document.createElement('a');
+        a.href = img.src;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+    }
+  });
+})();
+</script>
+</body>
 </html>
