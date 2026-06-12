@@ -17,7 +17,7 @@
   </script>
   <!-- LAZY LOADING START -->
   <!-- Preload the hero background image to improve LCP (Largest Contentful Paint) -->
-  <link as="image" fetchpriority="high" href="https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/artworks/1780168844469_1000102021.png" rel="preload"/>
+  <link as="image" fetchpriority="high" href="https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/backgrounds/file_0000000077c47207bd8e5092ed148a43.png" rel="preload"/>
   <!-- LAZY LOADING END -->
   <style>
    /* ── DYNAMIC THEME SYSTEM ── */
@@ -160,16 +160,7 @@
     /* ── HERO ── */
     #hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;overflow:hidden;}
 
-    /* ══════════════════════════════════════════════════════
-       BACKGROUND SYSTEM — 4-layer stack (bottom → top):
-         1. #hBgImg   — image fallback (always present)
-         2. #hBgVideo — video layer (covers image when playing)
-         3. .hBg      — particle overlay
-         4. .hOv      — dark gradient overlay for text legibility
-         5. .hCon     — content (z-index:2)
-       ══════════════════════════════════════════════════════ */
-
-    /* Layer 1 — Fallback image (always visible until video loads) */
+    /* STATIC ART BACKGROUND */
     #hBgImg{
       position:absolute;
       inset:0;
@@ -178,40 +169,7 @@
       background-position:center center;
       background-repeat:no-repeat;
       z-index:0;
-      /* Subtle slow zoom on image fallback only */
-      animation:bgZoom 20s ease-in-out infinite alternate;
     }
-
-    /* Layer 2 — Background video */
-    #hBgVideo{
-      position:absolute;
-      inset:0;
-      z-index:1;
-      overflow:hidden;
-    }
-    #hBgVideo video{
-      position:absolute;
-      top:50%;
-      left:50%;
-      /* Cinematic full-cover: no black bars, no gaps */
-      min-width:100%;
-      min-height:100%;
-      width:auto;
-      height:auto;
-      transform:translate(-50%,-50%);
-      object-fit:cover;
-      /* Fade in smoothly once loaded */
-      opacity:0;
-      transition:opacity 1s ease;
-      /* ── Cinematic video treatment ──
-         blur(4px)       — softens video so it reads as backdrop, not foreground
-         brightness(.48) — darkens; overlays handle the final levels
-         saturate(.28)   — strips colour so theme colours stay on content,
-                           not flooding the background                           */
-      filter:blur(4px) brightness(.48) saturate(.28);
-    }
-    /* When video is ready, fade it in over the image fallback */
-    #hBgVideo video.ready{opacity:1;}
 
     /* Layer 3 — Particle shimmer overlay (keeps existing animation) */
     .hBg{
@@ -996,23 +954,6 @@ min-height:56px;
   <section id="hero">
    <!-- Layer 1: Image fallback (shown while video loads or if video fails) -->
    <div id="hBgImg"></div>
-
-   <!-- Layer 2: Background video -->
-   <div id="hBgVideo">
-    <video
-     id="heroBgVideo"
-     autoplay
-     muted
-     loop
-     playsinline
-     preload="auto"
-     aria-hidden="true"
-    >
-     <source src="https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/backgrounds/0603-01_1780485334128.mp4" type="video/mp4"/>
-     <!-- No <source> fallback needed — image layer below handles it -->
-    </video>
-   </div>
-
    <!-- Layer 3: Particle shimmer overlay -->
    <div class="hBg" id="heroBg"></div>
 
@@ -1958,29 +1899,9 @@ min-height:56px;
   function applyBg(){
     /* Update the image fallback layer */
     var imgUrl = cfg.hero_bg ||
-      'https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/artworks/1780168844469_1000102021.png';
+      'https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/backgrounds/file_0000000077c47207bd8e5092ed148a43.png';
     document.getElementById('hBgImg').style.backgroundImage = "url('" + imgUrl + "')";
   }
-
-  /* ── Video ready handler: fade the video in over the image fallback ── */
-  (function(){
-    var vid = document.getElementById('heroBgVideo');
-    if(!vid) return;
-    function markReady(){
-      vid.classList.add('ready');
-      /* Try to play (needed on some browsers even with autoplay attr) */
-      vid.play().catch(function(){
-        /* Autoplay blocked (e.g. low-power mode) — image fallback stays visible */
-      });
-    }
-    if(vid.readyState >= 3){
-      markReady();
-    } else {
-      vid.addEventListener('canplay', markReady, {once:true});
-      /* Extra fallback: if canplay never fires within 4s, try playing anyway */
-      setTimeout(function(){ if(!vid.classList.contains('ready')) markReady(); }, 4000);
-    }
-  })();
 
   function updateUpCatDisplay(){
     const disp=document.getElementById('upCatDisplay');
