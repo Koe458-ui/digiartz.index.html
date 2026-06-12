@@ -3410,6 +3410,7 @@ function commentCurrentImage(imageId, imageUrl){
     closeMenu();
     panel.classList.add('open');
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     /* Push AdSense slots exactly once, after the panel is visible */
     if(!adsInit){
@@ -3427,6 +3428,7 @@ function commentCurrentImage(imageId, imageUrl){
   window.closeAdsPanel = function(){
     panel.classList.remove('open');
     document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
   };
 
   /* ── Dot updater on scroll ── */
