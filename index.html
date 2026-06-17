@@ -100,16 +100,75 @@
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
       position:relative;z-index:2;
-      transition:border-radius .45s ease-in-out,border-bottom-color .45s ease-in-out;
+      overflow:hidden;
+      transition:border-radius .45s ease-in-out,border-bottom-color .45s ease-in-out,padding .45s ease-in-out;
     }
     #navWrap.open #navBar{border-radius:22px 22px 0 0;border-bottom-color:transparent;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--tc) 8%,transparent);}
 
-    .nLogo{font-family:var(--fd);font-size:1.05rem;font-weight:700;letter-spacing:.15em;color:var(--tx);text-decoration:none;display:flex;align-items:center;gap:.4rem;background:none;border:none;cursor:pointer;}
+    .nLogo{font-family:var(--fd);font-size:1.05rem;font-weight:700;letter-spacing:.15em;color:var(--tx);text-decoration:none;display:flex;align-items:center;gap:.4rem;background:none;border:none;cursor:pointer;
+      transition:opacity .35s ease,transform .35s ease;}
     .nLogo .s{color:var(--pg);font-size:.72rem;}
 
-    /* Hamburger button */
-    .nHam{background:none;border:none;cursor:pointer;color:var(--txd);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;padding:.3rem;width:34px;height:34px;flex-shrink:0;transition:color .25s;}
-    .nHam:hover{color:var(--pg);}
+    /* Right-side group: Login + Hamburger */
+    .nRight{display:flex;align-items:center;gap:.55rem;
+      transition:opacity .35s ease,transform .35s ease;}
+
+    /* Login icon button — circular glass chip, matches hamburger button */
+    .nLoginBtn{
+      background:color-mix(in srgb,var(--sur) 92%,transparent);
+      border:1px solid var(--bdr);
+      color:var(--txd);
+      width:34px;height:34px;border-radius:50%;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 8px rgba(5,3,8,.10);
+      transition:color .25s,border-color .25s,background .25s,box-shadow .25s;
+      flex-shrink:0;
+    }
+    .nLoginBtn svg{width:16px;height:16px;display:block;}
+    .nLoginBtn:hover{color:var(--ps);border-color:var(--bdrh);background:color-mix(in srgb,var(--tc) 9%,transparent);}
+    .nLoginBtn.loggedIn{color:var(--ps);border-color:color-mix(in srgb,var(--tc) 35%,transparent);}
+
+    /* "Menu" centered label — hidden by default, shown when collapsed */
+    .nMenuLabel{
+      font-family:var(--fm);font-size:.78rem;letter-spacing:.3em;
+      color:var(--txd);
+      position:absolute;left:50%;transform:translateX(-50%);
+      opacity:0;pointer-events:none;white-space:nowrap;
+      transition:opacity .3s ease;
+    }
+
+    /* ── COLLAPSED (scrolled) state ── */
+    /* navWrap shrinks to a pill; override width and centering */
+    #navWrap{
+      transition:width .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+    }
+    #navWrap.navCollapsed{
+      width:min(120px,calc(100% - 2rem));
+    }
+    #navWrap.navCollapsed #navBar{
+      justify-content:center;
+      padding:.72rem 1.4rem;
+      border-radius:31px !important; /* keep full pill even if open class were somehow set */
+    }
+    #navWrap.navCollapsed .nLogo{opacity:0;pointer-events:none;position:absolute;left:-9999px;}
+    #navWrap.navCollapsed .nRight{opacity:0;pointer-events:none;position:absolute;right:-9999px;}
+    #navWrap.navCollapsed .nMenuLabel{opacity:1;pointer-events:auto;}
+    /* Also hide dropdown trigger when collapsed (clicking pill opens menu) */
+    #navWrap.navCollapsed #navDrop{display:none;}
+    #navWrap.navCollapsed #navSep{display:none;}
+
+    /* Hamburger button — matches .nLoginBtn glass-box style */
+    .nHam{
+      background:color-mix(in srgb,var(--sur) 92%,transparent);
+      border:1px solid var(--bdr);
+      cursor:pointer;color:var(--txd);
+      display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;
+      width:34px;height:34px;border-radius:50%;
+      box-shadow:0 2px 8px rgba(5,3,8,.10);
+      flex-shrink:0;transition:color .25s,border-color .25s,background .25s,box-shadow .25s;
+    }
+    .nHam:hover{color:var(--pg);border-color:var(--bdrh);background:color-mix(in srgb,var(--tc) 9%,transparent);}
     .nHam span{display:block;width:20px;height:1.5px;background:currentColor;border-radius:1px;transition:transform .45s ease-in-out,opacity .45s ease-in-out;}
     #navWrap.open .nHam span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
     #navWrap.open .nHam span:nth-child(2){opacity:0;transform:scaleX(0);}
@@ -1467,7 +1526,8 @@ body{background:var(--bg);}
 /* Nav adopts the white theme; subtle text-shadow keeps the logo legible
    over the hero photo without altering the hero background itself */
 #navBar,#navDrop{background:#ffffff!important;}
-.nLogo,.nHam{text-shadow:0 1px 6px rgba(255,255,255,.9),0 1px 2px rgba(255,255,255,.85);}
+.nLoginBtn,.nHam{background:#ffffff!important;}
+.nLogo,.nHam,.nLoginBtn{text-shadow:0 1px 6px rgba(255,255,255,.9),0 1px 2px rgba(255,255,255,.85);}
 
 
 /* ── Re-pin the HERO and elements layered over it to their
@@ -1527,12 +1587,21 @@ body{background:var(--bg);}
        ══════════════════════════════════════════════ -->
   <div id="navWrap">
    <div id="navBar">
-    <button class="nLogo" onclick="ddGoHome()">Koe <span class="s">✦</span></button>
-    <button class="nHam" id="hamBtn" onclick="toggleMenu()" title="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="navDrop">
-     <span></span>
-     <span></span>
-     <span></span>
-    </button>
+    <button class="nLogo" id="navLogo" onclick="ddGoHome()">Koe <span class="s">✦</span></button>
+    <span class="nMenuLabel" id="navMenuLabel">Menu</span>
+    <div class="nRight" id="navRight">
+     <button class="nLoginBtn" id="navLoginBtn" onclick="smHandleAuth()" title="Login" aria-label="Login">
+      <svg fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6"></circle>
+       <path d="M5 19.2c0-3.2 3.13-5.7 7-5.7s7 2.5 7 5.7" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"></path>
+      </svg>
+     </button>
+     <button class="nHam" id="hamBtn" onclick="toggleMenu()" title="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="navDrop">
+      <span></span>
+      <span></span>
+      <span></span>
+     </button>
+    </div>
    </div>
    <div id="navSep" aria-hidden="true"></div>
    <div id="navDrop" role="menu" aria-label="Navigation menu">
@@ -1547,10 +1616,6 @@ body{background:var(--bg);}
     <div class="ddDiv"></div>
     <button class="ddItem" onclick="openAdsPanel()">
      <span class="ddIco">◈</span>SPONSOR
-    </button>
-    <div class="ddDiv"></div>
-    <button class="ddItem" id="smLoginBtn" onclick="smHandleAuth()">
-     <span class="ddIco" id="smLoginIco">⊕</span><span id="smLoginLbl">LOGIN</span>
     </button>
     <div class="ddDiv"></div>
     <button class="ddItem" id="smAdmBtn" onclick="smHandleAdm()">
@@ -2294,17 +2359,18 @@ body{background:var(--bg);}
   var authUser = null; /* null = logged out, object = logged in */
   var authMode = 'login'; /* 'login' | 'signup' */
 
-  /* ── Sync the menu button label ── */
+  /* ── Sync the navbar Login button state (icon-only, no label) ── */
   function syncAuthBtn() {
-    var lbl = document.getElementById('smLoginLbl');
-    var ico = document.getElementById('smLoginIco');
-    if (!lbl) return;
+    var navBtn = document.getElementById('navLoginBtn');
+    if (!navBtn) return;
     if (authUser) {
-      lbl.textContent = 'LOGOUT';
-      if (ico) ico.textContent = '⊗';
+      navBtn.classList.add('loggedIn');
+      navBtn.title = 'Logout';
+      navBtn.setAttribute('aria-label','Logout');
     } else {
-      lbl.textContent = 'LOGIN';
-      if (ico) ico.textContent = '⊕';
+      navBtn.classList.remove('loggedIn');
+      navBtn.title = 'Login';
+      navBtn.setAttribute('aria-label','Login');
     }
   }
 
@@ -2655,6 +2721,106 @@ body{background:var(--bg);}
     if(w && w.classList.contains('open') && !w.contains(e.target)){ closeMenu(); }
   });
   function ddGoHome(){closeMenu();window.scrollTo({top:0,behavior:'smooth'});}
+
+  /* ── SMART SHRINKING NAVBAR ──────────────────────────────
+     Single source of truth for navbar collapse state.
+     - Hero visible  → full navbar (logo + login + hamburger)
+     - Hero scrolled past → collapses into a compact "Menu" pill
+     - Clicking "Menu" ONLY restores the full navbar (manual override);
+       it never opens the hamburger dropdown. The override holds until
+       hero visibility actually changes again (scroll up into hero, or
+       back out), so it can't be instantly re-collapsed by the same
+       observer tick that is already in the "past hero" state.
+     ───────────────────────────────────────────────────────── */
+  (function(){
+    var wrap   = document.getElementById('navWrap');
+    var hero   = document.getElementById('hero');
+    var menuLbl= document.getElementById('navMenuLabel');
+    if(!wrap) return;
+
+    var collapsed = false;
+    var manualOverride = false; /* true after a manual "Menu" expand, until hero state flips */
+
+    function setCollapsed(yes){
+      if(yes === collapsed){ return; }
+      collapsed = yes;
+      manualOverride = false; /* hero state changed — clear any manual pin */
+      if(yes){
+        /* Close dropdown before collapsing */
+        closeMenu();
+        wrap.classList.add('navCollapsed');
+      } else {
+        wrap.classList.remove('navCollapsed');
+      }
+    }
+
+    /* Clicking the pill "Menu" label only restores the full navbar.
+       It must NEVER open the hamburger dropdown — the dropdown opens
+       only via an explicit click on the hamburger icon itself. */
+    if(menuLbl){
+      menuLbl.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(!collapsed) return;
+        manualOverride = true;
+        wrap.classList.remove('navCollapsed');
+      });
+    }
+
+    /* Use IntersectionObserver on the hero section */
+    if(hero && 'IntersectionObserver' in window){
+      var obs = new IntersectionObserver(function(entries){
+        var heroVisible = entries[0].isIntersecting;
+        var wantCollapsed = !heroVisible;
+        if(manualOverride){
+          if(heroVisible){
+            /* Converged back to the natural "expanded" state — the
+               override is no longer needed, release it cleanly. */
+            manualOverride = false;
+            collapsed = false;
+            wrap.classList.remove('navCollapsed');
+            return;
+          }
+          if(wantCollapsed === collapsed){
+            /* Hero state diverged from the pinned visual state — the
+               user scrolled enough to flip it again. Release the pin
+               and force the navbar back in sync with reality. */
+            manualOverride = false;
+            collapsed = !wantCollapsed; /* force setCollapsed to actually apply */
+            setCollapsed(wantCollapsed);
+          }
+          /* else: still the same state that triggered the override,
+             nothing to do — keep the manual pin in place. */
+          return;
+        }
+        setCollapsed(wantCollapsed);
+      }, { threshold: 0.05 });
+      obs.observe(hero);
+    } else {
+      /* Fallback: scroll listener */
+      var heroH = 0;
+      function onScroll(){
+        if(!heroH){ heroH = (hero ? hero.offsetHeight : window.innerHeight) * 0.05; }
+        var pastHero = window.scrollY > heroH;
+        if(manualOverride){
+          if(!pastHero){
+            manualOverride = false;
+            collapsed = false;
+            wrap.classList.remove('navCollapsed');
+            return;
+          }
+          if(pastHero === collapsed){
+            manualOverride = false;
+            collapsed = !pastHero;
+            setCollapsed(pastHero);
+          }
+          return;
+        }
+        setCollapsed(pastHero);
+      }
+      window.addEventListener('scroll', onScroll, {passive:true});
+      onScroll();
+    }
+  })();
   function ddOpenGallery(){
     closeMenu();
     /* Always reset to full gallery when opening from nav or VIEW GALLERY button */
