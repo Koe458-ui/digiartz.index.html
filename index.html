@@ -1727,7 +1727,8 @@ body{background:var(--bg);}
    over the hero photo without altering the hero background itself */
 #navBar,#navDrop{background:#ffffff!important;}
 .nLoginBtn,.nHam{background:#ffffff!important;}
-.nLogo,.nHam,.nLoginBtn{text-shadow:0 1px 6px rgba(255,255,255,.9),0 1px 2px rgba(255,255,255,.85);}
+.nAvatarBtn{background:#ffffff!important;}
+.nLogo,.nHam,.nLoginBtn,.nAvatarBtn{text-shadow:0 1px 6px rgba(255,255,255,.9),0 1px 2px rgba(255,255,255,.85);}
 
 
 /* ── Re-pin the HERO and elements layered over it to their
@@ -1750,6 +1751,185 @@ body{background:var(--bg);}
   --pdim:color-mix(in srgb,var(--tc) 12%,transparent);
 }
 #intro{background:#ffffff;}
+
+/* ══════════════════════════════════════════════════════════
+   NAVBAR AVATAR — replaces profile icon after login.
+   Shares the exact same base shape/size as .nLoginBtn.
+   Uses the same first-letter + colour logic as .cpAvatar.
+   ══════════════════════════════════════════════════════════ */
+.nAvatarBtn{
+  /* Identical glass-box to .nLoginBtn */
+  background:color-mix(in srgb,var(--sur) 92%,transparent);
+  border:1px solid var(--bdrh);
+  width:34px;height:34px;border-radius:50%;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(5,3,8,.10),0 0 0 2px color-mix(in srgb,var(--tc) 18%,transparent);
+  transition:border-color .25s,background .25s,box-shadow .25s,opacity .35s ease .5s;
+  flex-shrink:0;
+  /* Avatar glow ring — same accent as comment avatars */
+  outline:none;
+  position:relative;
+}
+.nAvatarBtn:hover{
+  border-color:var(--bdrh);
+  background:color-mix(in srgb,var(--tc) 9%,transparent);
+  box-shadow:0 2px 8px rgba(5,3,8,.10),0 0 0 2px color-mix(in srgb,var(--tc) 38%,transparent);
+}
+.nAvatarBtn:focus-visible{
+  outline:2px solid var(--pg);
+  outline-offset:2px;
+}
+/* The letter inside — matches .cpAvatar typography exactly */
+.nAvatarBtn .nAvLetter{
+  font-family:var(--fd);
+  font-size:.82rem;
+  font-weight:700;
+  color:var(--ps);
+  line-height:1;
+  user-select:none;
+  pointer-events:none;
+}
+/* Collapsed state: avatar follows same hide logic as .nLoginBtn */
+#navWrap.navCollapsed .nAvatarBtn{
+  opacity:0;pointer-events:none;position:absolute;left:-9999px;transition-delay:0s;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE POPUP — floating card anchored to avatar button.
+   ══════════════════════════════════════════════════════════ */
+#profilePopup{
+  position:fixed;
+  top:calc(1rem + 61px + .3rem); /* navWrap top + navBar height + gap */
+  left:1rem; /* will be overridden by JS to align under avatar */
+  z-index:600;
+  /* Glass surface — same material as navBar */
+  background:var(--sur);
+  border:1px solid var(--bdrh);
+  border-radius:16px;
+  box-shadow:
+    0 4px 6px rgba(20,20,30,.05),
+    0 12px 32px rgba(20,20,30,.09),
+    0 2px 0 color-mix(in srgb,var(--tc) 10%,transparent) inset;
+  padding:1.6rem 1.4rem 1.2rem;
+  width:clamp(210px,88vw,260px);
+  display:flex;flex-direction:column;align-items:center;gap:.7rem;
+  /* Hidden state */
+  opacity:0;
+  transform:translateY(-8px) scale(.96);
+  pointer-events:none;
+  transition:opacity .22s cubic-bezier(.22,1,.36,1),transform .22s cubic-bezier(.22,1,.36,1);
+  will-change:opacity,transform;
+}
+#profilePopup.open{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+
+/* Avatar inside popup — same dimensions/style as .cpAvatar */
+.ppAvatar{
+  width:54px;height:54px;border-radius:50%;
+  background:color-mix(in srgb,var(--tc) 22%,transparent);
+  border:1.5px solid var(--bdrh);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:1.25rem;font-weight:700;
+  color:var(--ps);
+  flex-shrink:0;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 12%,transparent);
+  user-select:none;
+}
+
+/* Username */
+.ppUsername{
+  font-family:var(--fm);
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:var(--ps);
+  text-align:center;
+  /* Safe long-username handling */
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  width:100%;
+}
+
+/* Divider */
+.ppDiv{
+  width:100%;height:1px;
+  background:linear-gradient(to right,transparent,var(--bdr),transparent);
+  margin:.1rem 0;
+}
+
+/* Buttons container */
+.ppBtns{
+  display:flex;flex-direction:column;gap:.5rem;width:100%;
+}
+
+/* Shared button base */
+.ppBtn{
+  width:100%;
+  padding:.7rem 1rem;
+  font-family:var(--fm);
+  font-size:.74rem;
+  letter-spacing:.2em;
+  cursor:pointer;
+  border-radius:8px;
+  transition:background .22s,border-color .22s,color .22s,box-shadow .22s,transform .15s;
+  text-align:center;
+  outline:none;
+}
+.ppBtn:focus-visible{
+  outline:2px solid var(--pg);
+  outline-offset:2px;
+}
+.ppBtn:active{ transform:scale(.97); }
+
+/* Logout — accent-bordered primary action */
+.ppBtnLogout{
+  background:color-mix(in srgb,var(--tc) 10%,transparent);
+  border:1px solid var(--bdrh);
+  color:var(--ps);
+}
+.ppBtnLogout:hover{
+  background:color-mix(in srgb,var(--tc) 20%,transparent);
+  border-color:var(--pg);
+  box-shadow:0 0 14px color-mix(in srgb,var(--tc) 22%,transparent);
+}
+
+/* Cancel — ghost secondary */
+.ppBtnCancel{
+  background:transparent;
+  border:1px solid var(--bdr);
+  color:var(--txd);
+}
+.ppBtnCancel:hover{
+  background:color-mix(in srgb,var(--tc) 5%,transparent);
+  border-color:var(--bdrh);
+  color:var(--ps);
+}
+
+/* White-theme overrides — keep popup consistent with the site surface */
+#profilePopup{
+  background:#ffffff;
+  box-shadow:
+    0 1px 3px rgba(20,20,30,.06),
+    0 8px 28px rgba(20,20,30,.09),
+    0 2px 0 color-mix(in srgb,var(--tc) 8%,transparent) inset;
+}
+
+/* Mobile tweaks */
+@media(max-width:640px){
+  #profilePopup{
+    /* On small screens, anchor to left edge so it doesn't clip */
+    left:.8rem !important;
+    right:.8rem !important;
+    width:auto;
+    top:calc(.8rem + 57px + .3rem);
+  }
+}
 
 </style>
  </head>
@@ -1787,12 +1967,27 @@ body{background:var(--bg);}
        ══════════════════════════════════════════════ -->
   <div id="navWrap">
    <div id="navBar">
-    <button class="nLoginBtn" id="navLoginBtn" onclick="smHandleAuth()" title="Login" aria-label="Login">
-     <svg fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6"></circle>
-      <path d="M5 19.2c0-3.2 3.13-5.7 7-5.7s7 2.5 7 5.7" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"></path>
-     </svg>
-    </button>
+    <!-- Profile area: shows face icon (logged-out) or avatar button (logged-in) -->
+    <div id="navProfileArea" style="display:flex;align-items:center;flex-shrink:0;">
+     <!-- LOGGED-OUT: generic face icon (unchanged appearance) -->
+     <button class="nLoginBtn" id="navLoginBtn" onclick="openAuthMod()" title="Login" aria-label="Login">
+      <svg fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6"></circle>
+       <path d="M5 19.2c0-3.2 3.13-5.7 7-5.7s7 2.5 7 5.7" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"></path>
+      </svg>
+     </button>
+     <!-- LOGGED-IN: circular avatar with first letter -->
+     <button class="nAvatarBtn" id="navAvatarBtn"
+       onclick="toggleProfilePopup(event)"
+       title="Profile"
+       aria-label="Open profile menu"
+       aria-haspopup="true"
+       aria-expanded="false"
+       aria-controls="profilePopup"
+       style="display:none;">
+      <span class="nAvLetter" id="navAvatarLetter">?</span>
+     </button>
+    </div>
     <span class="nMenuLabel" id="navMenuLabel">Menu</span>
     <div class="nRight" id="navRight">
      <button class="nHam" id="hamBtn" onclick="toggleMenu()" title="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="navDrop">
@@ -1822,6 +2017,23 @@ body{background:var(--bg);}
     </button>
     </div>
    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       PROFILE POPUP — shown when logged-in avatar is clicked
+       ══════════════════════════════════════════════ -->
+  <div id="profilePopup" role="dialog" aria-modal="false" aria-label="Profile menu">
+    <!-- Avatar (same style as comment avatars) -->
+    <div class="ppAvatar" id="ppAvatar" aria-hidden="true">?</div>
+    <!-- Username -->
+    <div class="ppUsername" id="ppUsername"></div>
+    <!-- Divider -->
+    <div class="ppDiv" aria-hidden="true"></div>
+    <!-- Action buttons -->
+    <div class="ppBtns">
+      <button class="ppBtn ppBtnLogout" id="ppLogoutBtn" onclick="ppDoLogout()">LOGOUT</button>
+      <button class="ppBtn ppBtnCancel" onclick="closeProfilePopup()">CANCEL</button>
+    </div>
   </div>
   <section id="hero">
    <!-- Layer 1: Image fallback (shown while video loads or if video fails) -->
@@ -2826,22 +3038,150 @@ body{background:var(--bg);}
   var authUser = null; /* null = logged out, object = logged in */
   var authMode = 'login'; /* 'login' | 'signup' */
 
-  /* ── Sync the navbar Login button state (icon-only, no label) ── */
+  /* ══════════════════════════════════════════════════════════
+     SHARED AVATAR SYSTEM
+     Single source of truth for the first-letter avatar used in:
+       1. Navbar avatar button  (#navAvatarBtn / #navAvatarLetter)
+       2. Profile popup         (#ppAvatar / #ppUsername)
+       3. Comment bar avatar    (#cpBarAvatar) — already existed
+     All three read from the same authUser source via these helpers.
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── Sync the navbar: swap face icon ↔ avatar button ── */
   function syncAuthBtn() {
-    var navBtn = document.getElementById('navLoginBtn');
-    if (!navBtn) return;
+    var loginBtn  = document.getElementById('navLoginBtn');
+    var avatarBtn = document.getElementById('navAvatarBtn');
+    var letterEl  = document.getElementById('navAvatarLetter');
+
     if (authUser) {
-      navBtn.classList.add('loggedIn');
-      navBtn.title = 'Logout';
-      navBtn.setAttribute('aria-label','Logout');
+      /* Logged in: hide face icon, show avatar */
+      var letter = cpGetAvatarLetter(); /* reuse existing helper */
+      if (letterEl) letterEl.textContent = letter;
+      if (loginBtn)  loginBtn.style.display  = 'none';
+      if (avatarBtn) {
+        avatarBtn.style.display = 'flex';
+        avatarBtn.title = 'Profile — ' + cpGetDisplayName();
+        avatarBtn.setAttribute('aria-label', 'Open profile menu');
+      }
     } else {
-      navBtn.classList.remove('loggedIn');
-      navBtn.title = 'Login';
-      navBtn.setAttribute('aria-label','Login');
+      /* Logged out: show face icon, hide avatar, close popup */
+      if (loginBtn)  loginBtn.style.display  = '';
+      if (avatarBtn) avatarBtn.style.display  = 'none';
+      closeProfilePopup();
+    }
+
+    /* Also sync popup content and comment bar avatar */
+    syncProfilePopupContent();
+    cpSyncAvatar();
+  }
+
+  /* ── Populate popup avatar + username label ── */
+  function syncProfilePopupContent() {
+    var ppAv   = document.getElementById('ppAvatar');
+    var ppName = document.getElementById('ppUsername');
+    if (!authUser) return;
+    var letter = cpGetAvatarLetter();
+    var name   = cpGetDisplayName();
+    if (ppAv)   ppAv.textContent   = letter;
+    if (ppName) ppName.textContent = name;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     PROFILE POPUP LOGIC
+     ══════════════════════════════════════════════════════════ */
+
+  var _ppOpen = false;
+
+  /* Position popup flush under the avatar button */
+  function _positionProfilePopup() {
+    var avatarBtn = document.getElementById('navAvatarBtn');
+    var popup     = document.getElementById('profilePopup');
+    if (!avatarBtn || !popup) return;
+
+    var rect = avatarBtn.getBoundingClientRect();
+    var popupW = popup.offsetWidth || 240;
+    /* Align left edge of popup with left edge of avatar button,
+       but clamp so it never overflows the right edge of the viewport. */
+    var left = Math.min(rect.left, window.innerWidth - popupW - 12);
+    left = Math.max(12, left);
+    /* Top: just below the navBar; 8px gap */
+    var top = rect.bottom + 8;
+
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+    /* Clear the right override on larger screens */
+    if (window.innerWidth > 640) popup.style.right = 'auto';
+  }
+
+  function openProfilePopup() {
+    if (!authUser) return;
+    syncProfilePopupContent();
+    var popup     = document.getElementById('profilePopup');
+    var avatarBtn = document.getElementById('navAvatarBtn');
+    if (!popup) return;
+    /* Close hamburger menu if open */
+    closeMenu();
+    _positionProfilePopup();
+    popup.classList.add('open');
+    _ppOpen = true;
+    if (avatarBtn) avatarBtn.setAttribute('aria-expanded','true');
+    /* Focus the first button for keyboard users */
+    setTimeout(function(){
+      var first = popup.querySelector('.ppBtn');
+      if (first) first.focus();
+    }, 60);
+  }
+
+  function closeProfilePopup() {
+    var popup     = document.getElementById('profilePopup');
+    var avatarBtn = document.getElementById('navAvatarBtn');
+    if (popup) popup.classList.remove('open');
+    _ppOpen = false;
+    if (avatarBtn) avatarBtn.setAttribute('aria-expanded','false');
+  }
+
+  function toggleProfilePopup(e) {
+    if (e) e.stopPropagation();
+    if (_ppOpen) { closeProfilePopup(); } else { openProfilePopup(); }
+  }
+
+  /* Logout from popup — executes existing signOut flow then closes popup */
+  function ppDoLogout() {
+    closeProfilePopup();
+    if (sb) {
+      sb.auth.signOut()
+        .then(function(){ showToast('Signed out'); })
+        .catch(function(e){ showToast('Error: ' + e.message); });
     }
   }
 
-  /* ── Open / close modal ── */
+  /* Close popup on outside click */
+  document.addEventListener('click', function(e) {
+    if (!_ppOpen) return;
+    var popup     = document.getElementById('profilePopup');
+    var avatarBtn = document.getElementById('navAvatarBtn');
+    if (popup && !popup.contains(e.target) &&
+        avatarBtn && !avatarBtn.contains(e.target)) {
+      closeProfilePopup();
+    }
+  });
+
+  /* Re-position on resize so it never clips off-screen */
+  window.addEventListener('resize', function(){
+    if (_ppOpen) _positionProfilePopup();
+  }, {passive:true});
+
+  /* smHandleAuth: kept for backward compatibility but no longer wired
+     to the profile icon. The face icon now calls openAuthMod() directly.
+     This function is only kept in case any other code references it. */
+  function smHandleAuth() {
+    if (authUser) {
+      toggleProfilePopup();
+    } else {
+      closeMenu();
+      openAuthMod();
+    }
+  }
   function openAuthMod() {
     document.getElementById('authUser').value  = '';
     document.getElementById('authEmail').value = '';
@@ -2863,20 +3203,6 @@ body{background:var(--bg);}
   }
   function closeAuthMod() {
     document.getElementById('authMod').classList.remove('open');
-  }
-
-  /* ── Menu button handler ── */
-  function smHandleAuth() {
-    if (authUser) {
-      /* Logged in → sign out */
-      if (sb) {
-        sb.auth.signOut().then(function(){ showToast('Signed out'); }).catch(function(e){ showToast('Error: ' + e.message); });
-      }
-    } else {
-      /* Logged out → open login modal */
-      closeMenu();
-      openAuthMod();
-    }
   }
 
   /* ── Perform login ── */
@@ -3227,7 +3553,7 @@ body{background:var(--bg);}
 
   let tT;
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3000);}
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();closeAuthMod();closeComments();}}); /* FIXED: BUG-005 */
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();closeAuthMod();closeComments();closeProfilePopup();}}); /* FIXED: BUG-005 */
 
   /* ── HAMBURGER MENU (attached dropdown) ── */
   function toggleMenu(){
