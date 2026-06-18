@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Explicitly allow Googlebot's image crawler and the general image
+# crawl path used by Google Images / Google Image Search. Nothing in
+# this file disallows /artwork/, the Supabase storage image host, or
+# any image asset path — full crawl access is intentional.
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+Sitemap: https://digiartz.pages.dev/sitemap.xml
