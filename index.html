@@ -1800,8 +1800,8 @@ body{background:var(--bg);}
    ══════════════════════════════════════════════════════════ */
 #profilePopup{
   position:fixed;
-  top:calc(1rem + 61px + .3rem); /* navWrap top + navBar height + gap */
-  left:1rem; /* will be overridden by JS to align under avatar */
+  top:calc(1rem + 61px + .5rem); /* navWrap top + navBar height + gap */
+  left:50%;
   z-index:600;
   /* Glass surface — same material as navBar */
   background:var(--sur);
@@ -1814,16 +1814,16 @@ body{background:var(--bg);}
   padding:1.6rem 1.4rem 1.2rem;
   width:clamp(210px,88vw,260px);
   display:flex;flex-direction:column;align-items:center;gap:.7rem;
-  /* Hidden state */
+  /* Hidden state — centred on X axis */
   opacity:0;
-  transform:translateY(-8px) scale(.96);
+  transform:translateX(-50%) translateY(-8px) scale(.96);
   pointer-events:none;
   transition:opacity .22s cubic-bezier(.22,1,.36,1),transform .22s cubic-bezier(.22,1,.36,1);
   will-change:opacity,transform;
 }
 #profilePopup.open{
   opacity:1;
-  transform:translateY(0) scale(1);
+  transform:translateX(-50%) translateY(0) scale(1);
   pointer-events:auto;
 }
 
@@ -1920,14 +1920,10 @@ body{background:var(--bg);}
     0 2px 0 color-mix(in srgb,var(--tc) 8%,transparent) inset;
 }
 
-/* Mobile tweaks */
+/* Mobile: slightly lower top to account for shorter navBar height */
 @media(max-width:640px){
   #profilePopup{
-    /* On small screens, anchor to left edge so it doesn't clip */
-    left:.8rem !important;
-    right:.8rem !important;
-    width:auto;
-    top:calc(.8rem + 57px + .3rem);
+    top:calc(.8rem + 54px + .5rem);
   }
 }
 
@@ -3092,26 +3088,6 @@ body{background:var(--bg);}
 
   var _ppOpen = false;
 
-  /* Position popup flush under the avatar button */
-  function _positionProfilePopup() {
-    var avatarBtn = document.getElementById('navAvatarBtn');
-    var popup     = document.getElementById('profilePopup');
-    if (!avatarBtn || !popup) return;
-
-    var rect = avatarBtn.getBoundingClientRect();
-    var popupW = popup.offsetWidth || 240;
-    /* Align left edge of popup with left edge of avatar button,
-       but clamp so it never overflows the right edge of the viewport. */
-    var left = Math.min(rect.left, window.innerWidth - popupW - 12);
-    left = Math.max(12, left);
-    /* Top: just below the navBar; 8px gap */
-    var top = rect.bottom + 8;
-
-    popup.style.left = left + 'px';
-    popup.style.top  = top  + 'px';
-    /* Clear the right override on larger screens */
-    if (window.innerWidth > 640) popup.style.right = 'auto';
-  }
 
   function openProfilePopup() {
     if (!authUser) return;
@@ -3121,7 +3097,6 @@ body{background:var(--bg);}
     if (!popup) return;
     /* Close hamburger menu if open */
     closeMenu();
-    _positionProfilePopup();
     popup.classList.add('open');
     _ppOpen = true;
     if (avatarBtn) avatarBtn.setAttribute('aria-expanded','true');
@@ -3165,11 +3140,6 @@ body{background:var(--bg);}
       closeProfilePopup();
     }
   });
-
-  /* Re-position on resize so it never clips off-screen */
-  window.addEventListener('resize', function(){
-    if (_ppOpen) _positionProfilePopup();
-  }, {passive:true});
 
   /* smHandleAuth: kept for backward compatibility but no longer wired
      to the profile icon. The face icon now calls openAuthMod() directly.
