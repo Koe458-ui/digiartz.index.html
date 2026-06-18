@@ -1800,10 +1800,9 @@ body{background:var(--bg);}
    ══════════════════════════════════════════════════════════ */
 #profilePopup{
   position:fixed;
-  top:calc(1rem + 61px + .5rem); /* navWrap top + navBar height + gap */
+  top:50%;
   left:50%;
   z-index:600;
-  /* Glass surface — same material as navBar */
   background:var(--sur);
   border:1px solid var(--bdrh);
   border-radius:16px;
@@ -1814,16 +1813,16 @@ body{background:var(--bg);}
   padding:1.6rem 1.4rem 1.2rem;
   width:clamp(210px,88vw,260px);
   display:flex;flex-direction:column;align-items:center;gap:.7rem;
-  /* Hidden state — centred on X axis */
+  /* Hidden state */
   opacity:0;
-  transform:translateX(-50%) translateY(-8px) scale(.96);
+  transform:translate(-50%,-50%) scale(.96);
   pointer-events:none;
   transition:opacity .22s cubic-bezier(.22,1,.36,1),transform .22s cubic-bezier(.22,1,.36,1);
   will-change:opacity,transform;
 }
 #profilePopup.open{
   opacity:1;
-  transform:translateX(-50%) translateY(0) scale(1);
+  transform:translate(-50%,-50%) scale(1);
   pointer-events:auto;
 }
 
@@ -1918,13 +1917,6 @@ body{background:var(--bg);}
     0 1px 3px rgba(20,20,30,.06),
     0 8px 28px rgba(20,20,30,.09),
     0 2px 0 color-mix(in srgb,var(--tc) 8%,transparent) inset;
-}
-
-/* Mobile: slightly lower top to account for shorter navBar height */
-@media(max-width:640px){
-  #profilePopup{
-    top:calc(.8rem + 54px + .5rem);
-  }
 }
 
 </style>
