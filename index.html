@@ -281,18 +281,9 @@
       z-index:0;
     }
 
-    /* Layer 3 — Particle shimmer overlay removed per cleanup request */
-    .hBg{
-      position:absolute;
-      inset:0;
-      z-index:2;
-      pointer-events:none;
-    }
-
     /* ── Mobile optimisations ── */
     @media(max-width:768px){
-      /* On mobile, freeze the image zoom to save CPU */
-      #hBgImg{ animation:none; }
+      /* FIXED: N-11 — animation:none on #hBgImg removed; #hBgImg has no animation declared */
     }
     /* hOv — dark cinematic overlay only; theme-color radial removed (was causing large colour haze across hero) */
     .hOv{position:absolute;inset:0;z-index:3;background:none;}
@@ -312,6 +303,9 @@
     .hEBg:hover{background:color-mix(in srgb,var(--tc) 30%,transparent);border-color:var(--pg);}
     body.admin .hEBg{display:flex;}
     #bgF{display:none;}
+    /* FIXED: N-04 — standard visually-hidden utility for the #bgF label element;
+       keeps content available to screen readers without showing on screen. */
+    .srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
     /* SETUP BANNER */
     #sBanner{background:color-mix(in srgb,var(--tc) 12%,transparent);border:1px solid var(--pg);padding:1rem 1.5rem;text-align:center;font-family:var(--fm);font-size:.76rem;letter-spacing:.12em;color:var(--ps);line-height:1.8;display:none;}
@@ -818,10 +812,13 @@
     .cpCommentText{font-family:var(--fb);font-size:.95rem;font-weight:400;color:var(--tx);line-height:1.6;word-break:break-word;}
     .cpCommentTime{font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;color:var(--txd);}
 
-    /* Fixed bottom composer — hidden by default, shown via JS when page opens */
     .cpComposerWrap{width:100%;display:flex;flex-direction:column;gap:6px;} /* FIXED: HTML-004 */
+    /* FIXED: N-16 — changed from position:fixed to position:sticky so .cpBar
+       is scoped to the #commentsPage flex column instead of the viewport.
+       #commentsPage is already position:fixed with flex-direction:column,
+       so sticky:bottom:0 pins .cpBar to the bottom of that container reliably. */
     .cpBar{
-      position:fixed;bottom:0;left:0;right:0;
+      position:sticky;bottom:0;
       z-index:501;
       background:rgba(5,3,8,.97);
       border-top:1px solid var(--bdrh);
@@ -829,6 +826,7 @@
       padding:.75rem 1.2rem;
       display:none;
       align-items:center;gap:.75rem;
+      flex-shrink:0;
     }
     .cpBarAvatar{
       width:36px;height:36px;border-radius:50%;flex-shrink:0;
@@ -1606,10 +1604,13 @@ height:80px;
   gap: .5rem;
   opacity: .6;
   animation: apHintFade 3s ease forwards 1s;
+  /* FIXED: N-08 — pointer-events is not animatable; applied statically so
+     the hint never intercepts clicks even before the animation ends. */
+  pointer-events: none;
 }
 @keyframes apHintFade {
   0%  { opacity: .6; }
-  100%{ opacity: 0; pointer-events: none; }
+  100%{ opacity: 0; }
 }
 
 /* ── Sponsor description (styled like About section) ── */
@@ -1697,7 +1698,7 @@ body{background:var(--bg);}
 #navWrap.open #navDrop{box-shadow:0 1px 3px rgba(20,20,30,.06),0 4px 14px rgba(20,20,30,.06)!important;}
 .gItem:hover{box-shadow:0 6px 20px rgba(20,20,30,.10)!important;}
 .hCta:hover,.fltDone:hover,.mBtn:hover,.admSv:hover,.sCard:hover,.cpBarSend:hover,.upBtn:hover,.fgFltBtn:hover,.fgFltBtn.active,.fltOptH:has(input:checked){box-shadow:none!important;}
-.lmTitle::after{display:none;}
+/* FIXED: N-10 — .lmTitle::after removed; .lmTitle has no ::after pseudo-element */
 
 /* Overlay / scrim backgrounds used by non-hero panels — lightened so the
    white theme reads as light chrome instead of dark glass */
@@ -1742,14 +1743,8 @@ body{background:var(--bg);}
   --bdrh:color-mix(in srgb,var(--tc) 45%,transparent);
   --pdim:color-mix(in srgb,var(--tc) 12%,transparent);
 }
-#intro{
-  --bg:#050308;--sur:#0d0a14;--sur2:#120e1c;
-  --tx:#f0e8ff;--txd:rgba(196,181,253,.6);
-  --tc:#9a9ea5;--pg:#8a8f98;--pb:#b8bcc2;--ps:#cfd2d6;
-  --bdr:color-mix(in srgb,var(--tc) 18%,transparent);
-  --bdrh:color-mix(in srgb,var(--tc) 45%,transparent);
-  --pdim:color-mix(in srgb,var(--tc) 12%,transparent);
-}
+/* FIXED: N-07 — removed contradictory dark-variable block on #intro;
+   #intro is white-themed; background:#ffffff is the only override needed. */
 #intro{background:#ffffff;}
 
 /* ══════════════════════════════════════════════════════════
@@ -2024,12 +2019,11 @@ body{background:var(--bg);}
     </div>
   </div>
   <section id="hero">
-   <!-- Layer 1: Image fallback (shown while video loads or if video fails) -->
+   <!-- FIXED: N-06 — stale comment removed; this layer was never video-backed,
+        it's the cinematic scroll background image layer (see chBgA/chBgB). -->
    <div id="hBgImg"></div>
-   <!-- Layer 3: Particle shimmer overlay -->
-   <div class="hBg" id="heroBg"></div>
 
-   <!-- Layer 4: Dark gradient overlay for text readability -->
+   <!-- Dark gradient overlay for text readability -->
    <div class="hOv"></div>
 
    <div class="hCon">
@@ -2061,6 +2055,8 @@ body{background:var(--bg);}
     🖼 CHANGE BACKGROUND
    </button>
    <input accept="image/*" id="bgF" onchange="handleBg(event)" type="file"/>
+   <!-- FIXED: N-04 — visually-hidden label associated with #bgF for screen readers / form semantics -->
+   <label for="bgF" class="srOnly">Choose hero background image</label>
   </section>
   <!-- FEATURED SHOWCASE HTML START -->
   <section id="featured">
@@ -2161,8 +2157,8 @@ body{background:var(--bg);}
     <p class="aTxt" id="aTxt">
      I am <strong>KOE</strong> — a digital artist working on Ibis Paint, turning ideas in my head into sketches and finished pieces. I draw characters, cars, landscapes, and different creative concepts, always trying to improve my style and add more detail with each work. For me, drawing is just a way to express what I can't always say in words and keep growing with every piece I make. <strong>"Art has no limit."</strong>
     </p>
-    <!-- ⚠ This admin textarea is currently non-functional: content is not saved or loaded. Either implement save/load logic or remove this field. -->
-    <textarea class="aEA" id="aEA" placeholder="Write your about text here..." disabled></textarea>
+    <!-- Admin textarea: edit and save via the admin bar's SAVE SETTINGS button -->
+    <textarea class="aEA" id="aEA" placeholder="Write your about text here..."></textarea>
    </div>
   </section>
   <section id="connect">
@@ -2374,11 +2370,11 @@ body{background:var(--bg);}
           <!-- Ad Card 1 -->
           <div class="apCard">
             <div class="apCardLbl">AD · 01</div>
-            <!-- ⚠ Replace data-ad-slot="auto" with your real AdSense numeric slot ID from your AdSense dashboard -->
+            <!-- ⚠ Replace data-ad-slot="" with your real AdSense numeric slot ID from your AdSense dashboard -->
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-1351696642556147"
-                 data-ad-slot="auto"
+                 data-ad-slot=""
                  data-ad-format="auto"
                  data-full-width-responsive="false"></ins>
           </div>
@@ -2386,11 +2382,11 @@ body{background:var(--bg);}
           <!-- Ad Card 2 -->
           <div class="apCard">
             <div class="apCardLbl">AD · 02</div>
-            <!-- ⚠ Replace data-ad-slot="auto" with your real AdSense numeric slot ID from your AdSense dashboard -->
+            <!-- ⚠ Replace data-ad-slot="" with your real AdSense numeric slot ID from your AdSense dashboard -->
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-1351696642556147"
-                 data-ad-slot="auto"
+                 data-ad-slot=""
                  data-ad-format="auto"
                  data-full-width-responsive="false"></ins>
           </div>
@@ -2398,11 +2394,11 @@ body{background:var(--bg);}
           <!-- Ad Card 3 -->
           <div class="apCard">
             <div class="apCardLbl">AD · 03</div>
-            <!-- ⚠ Replace data-ad-slot="auto" with your real AdSense numeric slot ID from your AdSense dashboard -->
+            <!-- ⚠ Replace data-ad-slot="" with your real AdSense numeric slot ID from your AdSense dashboard -->
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-1351696642556147"
-                 data-ad-slot="auto"
+                 data-ad-slot=""
                  data-ad-format="auto"
                  data-full-width-responsive="false"></ins>
           </div>
@@ -2543,13 +2539,16 @@ body{background:var(--bg);}
   </div>
   <div class="toast" id="toast">
   </div>
+  <!-- FIXED: C-01 — Supabase credentials moved out of source into config.js
+       (gitignored on deploy). See config.example.js for the template. -->
+  <script src="config.js"></script>
   <script>
-   // ╔══════════════════════════════════════════════╗
-  // ║  FILL IN YOUR SUPABASE CREDENTIALS BELOW     ║
-  // ╚══════════════════════════════════════════════╝
-  const SB_URL = 'https://tmqzqlrpjpydiftlrzmj.supabase.co';
-  const SB_KEY = 'sb_publishable_x7xlsCx-ZsvpNLCXRxyvMw_PsJQT2xy';
-  // ════════════════════════════════════════════════
+  // FIXED: C-01 — credentials no longer hardcoded inline. They now live in
+  // config.js (gitignored), which must define window.KOE_CONFIG = { SB_URL, SB_KEY }.
+  // See config.example.js for the template. Falls back to the banner below
+  // if config.js wasn't loaded or is incomplete.
+  const SB_URL = (window.KOE_CONFIG && window.KOE_CONFIG.SB_URL) || '';
+  const SB_KEY = (window.KOE_CONFIG && window.KOE_CONFIG.SB_KEY) || '';
 
   // FIXED: SEC-001 — client-side ADMIN_PW removed. Admin status is now
   // derived from the authenticated user's role in the Supabase
@@ -2565,7 +2564,7 @@ body{background:var(--bg);}
   var SITE_DEFAULT_IMAGE = (document.querySelector('meta[property="og:image"]')||{}).content || '';
 
   let sb = null;
-  if (SB_URL !== 'YOUR_SUPABASE_URL') {
+  if (SB_URL && SB_KEY) {
     sb = supabase.createClient(SB_URL , SB_KEY )
   } else {
     document.getElementById('sBanner').classList.add('show');
@@ -2586,8 +2585,13 @@ body{background:var(--bg);}
       ]);
       images=imgs||[];
       (sets||[]).forEach(r=>{
-        /* about and socials removed from admin — only hero_bg is synced */
         if(r.key==='hero_bg')cfg.hero_bg=r.value||'';
+        if(r.key==='about_text'){
+          const txt = document.getElementById('aTxt');
+          const ea = document.getElementById('aEA');
+          if(txt) txt.innerHTML = r.value || txt.innerHTML;
+          if(ea) ea.value = r.value || ea.value;
+        }
       });
     }catch(e){console.error(e);}
   }
@@ -2597,7 +2601,10 @@ body{background:var(--bg);}
   async function saveAll(){
     if(!sb||!isAdm)return;
     /* About and Let's Connect are no longer editable via admin panel — edit from code only */
-    await Promise.all([saveSetting('hero_bg',cfg.hero_bg)]);
+    await Promise.all([
+      saveSetting('hero_bg',cfg.hero_bg),
+      saveSetting('about_text',document.getElementById('aEA').value)
+    ]);
     showToast('Saved to cloud ✦');
   }
 
@@ -2702,7 +2709,6 @@ body{background:var(--bg);}
     if(btn)btn.classList.toggle('active',isFiltered);
   }
 
-  function setGrid(m){/* legacy shim — no-op, grid now controlled by filter panel */}
   function openFilterPanel(){
     /* Sync radio buttons to current state before opening */
     var catR=document.querySelector('input[name="fltCat"][value="'+filterCat+'"]');
@@ -2964,13 +2970,7 @@ body{background:var(--bg);}
     if(m){
       openArtworkById(m[1], false);
     } else {
-      var modal=document.getElementById('artModal');
-      if(modal && modal.classList.contains('open')){
-        modal.classList.remove('open');
-        modal.classList.remove('closing');
-        modal.setAttribute('data-state','closed');
-        document.body.style.overflow='';
-      }
+      closeLB();
       resetArtworkSEO();
     }
   });
@@ -3133,17 +3133,6 @@ body{background:var(--bg);}
     }
   });
 
-  /* smHandleAuth: kept for backward compatibility but no longer wired
-     to the profile icon. The face icon now calls openAuthMod() directly.
-     This function is only kept in case any other code references it. */
-  function smHandleAuth() {
-    if (authUser) {
-      toggleProfilePopup();
-    } else {
-      closeMenu();
-      openAuthMod();
-    }
-  }
   function openAuthMod() {
     document.getElementById('authUser').value  = '';
     document.getElementById('authEmail').value = '';
@@ -3635,6 +3624,7 @@ body{background:var(--bg);}
     }
     if(isAdm){
       isAdm=false;document.body.classList.remove('admin');syncAdmBtn();showToast('Admin mode off');
+      closeMenu(); /* FIXED: N-12 — close menu on OFF just like ON */
     } else {
       isAdm=true;document.body.classList.add('admin');syncAdmBtn();showToast('Admin mode on ✦');
       closeMenu();
@@ -3876,23 +3866,13 @@ async function openComments(){
   function spawnPts(){const c=document.getElementById('iPts');for(let i=0;i<28;i++){const s=document.createElement('span');s.style.left=Math.random()*100+'%';s.style.top=(40+Math.random()*40)+'%';s.style.animationDuration=(1.5+Math.random()*1.5)+'s';s.style.animationDelay=(Math.random()*2)+'s';c.appendChild(s);}}
 
   /* ══════════════════════════════════════════════
-     DYNAMIC THEME SYSTEM
-     Cycle: purple→pink→red→orange→yellow→white→grey→black→repeat
-     Each theme: 0.5s fade-in · 5s hold · 0.5s fade-out
-     Total interval: 6s  |  CSS transition: 0.5s ease
+     THEME SYSTEM
+     White-theme conversion: the previous auto-cycling RGB/neon array
+     (purple→pink→red→...) and its nextTheme() stepper were dead code —
+     only the purple entry was ever applied, with no interval or call
+     site for cycling. FIXED: N-01 — removed; fixed on purple only.
      ══════════════════════════════════════════════ */
-  var THEMES = [
-    { name:'purple', tc:'#a855f7', bg:'#050308', sur:'#0d0a14', su2:'#120e1c', tx:'#f0e8ff',  txd:'rgba(196,181,253,.6)' },
-    { name:'pink',   tc:'#ec4899', bg:'#08030a', sur:'#140a10', su2:'#1c0e18', tx:'#ffe0f5',  txd:'rgba(253,181,219,.6)' },
-    { name:'red',    tc:'#ef4444', bg:'#080303', sur:'#140a0a', su2:'#1c0e0e', tx:'#ffe8e8',  txd:'rgba(253,181,181,.6)' },
-    { name:'orange', tc:'#f97316', bg:'#080401', sur:'#140c02', su2:'#1c1204', tx:'#fff0d5',  txd:'rgba(253,196,130,.6)' },
-    { name:'yellow', tc:'#eab308', bg:'#070600', sur:'#110f00', su2:'#181400', tx:'#fffde0',  txd:'rgba(253,230,130,.6)' },
-    { name:'white',  tc:'#e0e0e0', bg:'#0a0a0a', sur:'#141414', su2:'#1e1e1e', tx:'#ffffff',  txd:'rgba(220,220,220,.6)' },
-    { name:'grey',   tc:'#9ca3af', bg:'#080808', sur:'#111111', su2:'#181818', tx:'#d0d0d0',  txd:'rgba(156,163,175,.6)' },
-    { name:'neon-blue', tc:'#00d4ff', bg:'#00050a', sur:'#001a24', su2:'#00242f', tx:'#e0faff', txd:'rgba(0,212,255,.6)' }
-  ];
-
-  var themeIdx = 0;
+  var THEME_PURPLE = { tc:'#a855f7', bg:'#050308', sur:'#0d0a14', su2:'#120e1c', tx:'#f0e8ff', txd:'rgba(196,181,253,.6)' };
 
   function applyTheme(t) {
     var r = document.documentElement;
@@ -3910,14 +3890,7 @@ async function openComments(){
     }
   }
 
-  function nextTheme() {
-    themeIdx = (themeIdx + 1) % THEMES.length;
-    applyTheme(THEMES[themeIdx]);
-  }
-
-  /* White-theme conversion: auto-cycling RGB/neon accent colors removed.
-     Theme is now fixed on purple (index 0) — no interval, no color animation. */
-  applyTheme(THEMES[themeIdx]);
+  applyTheme(THEME_PURPLE);
 
   (function(){
     var bar = document.getElementById('iLoadBar');
@@ -4315,7 +4288,9 @@ function commentCurrentImage(imageId, imageUrl){
       document.getElementById('commentFromImageBtn').onclick = function(){
         /* Capture the currently open artwork image as the comment thumbnail */
         var img = document.getElementById('lbImg');
-        currentLightboxImageSrc = (img && img.src) ? img.src : '';
+        // Use full-resolution URL: strip Supabase transform params if present
+        var src = (img && img.src) ? img.src : '';
+        currentLightboxImageSrc = src.replace(/[?&]width=\d+/g, '').replace(/[?&]quality=\d+/g, '').replace(/\?&/g, '?').replace(/\?$/, '');
         /* Close modal */
         closeLB();
         /* Open comments with the thumbnail pre-populated */
@@ -4326,7 +4301,9 @@ function commentCurrentImage(imageId, imageUrl){
         var img = document.getElementById('lbImg');
         if(!img || !img.src) return;
         var a = document.createElement('a');
-        a.href = img.src;
+        // Use full-resolution URL: strip Supabase transform params if present
+        var fullSrc = img.src.replace(/[?&]width=\d+/g, '').replace(/[?&]quality=\d+/g, '').replace(/\?&/g, '?').replace(/\?$/, '');
+        a.href = fullSrc;
         a.download = '';
         document.body.appendChild(a);
         a.click();
