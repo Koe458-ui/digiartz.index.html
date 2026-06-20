@@ -2338,20 +2338,19 @@ body{background:var(--bg);}
 
 /* ── Background image layer: GPU-composited, no layout impact ── */
 #hBgImg{
-  /* Extend slightly beyond bounds to absorb parallax travel without gap.
-     The scale(1.05) also helps cover this, but the extra height is cheap
-     insurance for fast scrollers and tall viewports. */
+  /* Extend beyond bounds to absorb parallax travel without gap.
+     Using explicit TRBL instead of inset shorthand so we can
+     break the symmetry (extra top/bottom for parallax headroom). */
+  position: absolute;
   top: -8%;
   bottom: -8%;
   left: 0;
   right: 0;
-  inset: unset; /* override the inset:0 shorthand from base rule */
-  position: absolute;
   /* Transform origin center — scale grows outward symmetrically */
   transform-origin: center center;
   /* Promote to own compositor layer */
   will-change: transform, opacity;
-  /* Smooth the JS-driven values; duration 0 = JS owns easing fully */
+  /* JS drives all values — no CSS transition so easing is fully JS-owned */
   transition: none;
 }
 
@@ -2366,6 +2365,8 @@ body{background:var(--bg);}
   border-radius: 18px 18px 0 0;
   /* Clip so rounded corners work cleanly */
   overflow: hidden;
+  /* Must have a background — without this it's transparent over the hero */
+  background: var(--bg);
 }
 
 /* ── Inset depth shadow at the top of the rising section ──
@@ -5376,7 +5377,7 @@ async function openComments(){
     var riserY = RISE_LEAD_PX * (1 - riserEased);
 
     /* Apply — only transform + opacity, always on compositor layers */
-    bgImg.style.transform  = 'scale(' + scale.toFixed(4) + ') translateY(' + (-parallaxY).toFixed(2) + 'px)';
+    bgImg.style.transform  = 'translateY(' + (-parallaxY).toFixed(2) + 'px) scale(' + scale.toFixed(4) + ')';
     bgImg.style.opacity    = bgOpacity.toFixed(3);
     riser.style.transform  = 'translateY(' + riserY.toFixed(2) + 'px)';
 
