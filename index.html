@@ -776,6 +776,80 @@ body.admin .hEBg{display:flex;}
     .fltDone:hover{background:color-mix(in srgb,var(--tc) 25%,transparent);box-shadow:0 0 26px color-mix(in srgb,var(--tc) 42%,transparent),inset 0 0 20px color-mix(in srgb,var(--tc) 8%,transparent);transform:translateY(-1px);}
     .fltDone:active{transform:translateY(0) scale(.98);}
 
+    /* ══════════════════════════════════════════════════════════
+       GALLERY LOAD MORE BUTTON
+       Centered below gallery grid — same visual DNA as .shBtn /
+       hero CTA but adapted for the gallery overlay context.
+       ══════════════════════════════════════════════════════════ */
+    .fgLoadMoreWrap{
+      display:flex;
+      justify-content:center;
+      padding:2rem 1.5rem 1rem;
+    }
+    .fgLoadMore{
+      padding:.85rem 2.2rem;
+      border:1px solid var(--pg);
+      background:rgba(255,255,255,.55);
+      color:var(--ps);
+      font-family:var(--fm);
+      font-size:.8rem;
+      letter-spacing:.2em;
+      cursor:pointer;
+      transition:background .3s,border-color .3s,box-shadow .3s,transform .3s;
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      border-radius:6px;
+      min-width:200px;
+      justify-content:center;
+    }
+    .fgLoadMore:hover{
+      background:rgba(255,255,255,.75);
+      border-color:var(--pb);
+      box-shadow:0 0 30px color-mix(in srgb,var(--tc) 30%,transparent);
+      transform:translateY(-2px);
+    }
+    .fgLoadMore:active{transform:translateY(0) scale(.98);}
+    /* In the gallery overlay the background is var(--bg) not the hero photo,
+       so override the rgba whites to use the design tokens instead */
+    #fg .fgLoadMore{
+      background:color-mix(in srgb,var(--tc) 8%,transparent);
+      color:var(--ps);
+      border-color:var(--bdrh);
+    }
+    #fg .fgLoadMore:hover{
+      background:color-mix(in srgb,var(--tc) 18%,transparent);
+      border-color:var(--pg);
+      box-shadow:0 0 26px color-mix(in srgb,var(--tc) 35%,transparent);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       COMMENTS PULL-TO-REFRESH SPINNER
+       Appears at the bottom of the comments list when the user
+       scrolls past the last comment. Spins for ~1.2s then
+       triggers a silent refresh.
+       ══════════════════════════════════════════════════════════ */
+    .cpRefreshWrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:1.2rem 0 .5rem;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .3s ease;
+    }
+    .cpRefreshWrap.visible{
+      opacity:1;
+    }
+    .cpRefreshSpinner{
+      width:22px;height:22px;
+      border:2px solid color-mix(in srgb,var(--tc) 25%,transparent);
+      border-top-color:var(--pg);
+      border-radius:50%;
+      animation:cpSpin .9s linear infinite;
+    }
+    @keyframes cpSpin{to{transform:rotate(360deg);}}
+
     .fgBdy{padding:1.5rem;}
     .fgEmp{text-align:center;padding:4rem 2rem;color:var(--txd);font-family:var(--fm);font-size:.8rem;letter-spacing:.2em;}
     /* ── FIXED: fgGrid now uses display:grid (row-first) instead of
@@ -2236,6 +2310,117 @@ body{background:var(--bg);}
     0 2px 0 color-mix(in srgb,var(--tc) 8%,transparent) inset;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   § CINEMATIC SCROLL TRANSITION SYSTEM
+   ─────────────────────────────────────────────────────────────
+   Architecture:
+   · #hBgImg         — GPU-composited parallax layer (transform only)
+   · #hero           — clip container; overflow:hidden keeps the
+                        scaled image from bleeding out
+   · .cst-riser      — the first content section; rises over the
+                        hero via translateY driven by scroll progress
+   · .cst-shadow     — inset shadow at top of riser for depth
+   · .cst-bg-fade    — opacity fade applied to #hBgImg as cover completes
+
+   Performance contract:
+   · Only transform + opacity on GPU layers → zero layout/paint
+   · Single rAF-gated passive scroll listener (no jank)
+   · IntersectionObserver disables rAF loop when hero is off-screen
+   · prefers-reduced-motion: all motion disabled at CSS level
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Hero: clip the parallax image so scale doesn't bleed ── */
+#hero{
+  overflow: hidden;
+  /* Ensure it stacks below the rising section in z-order */
+  isolation: isolate;
+}
+
+/* ── Background image layer: GPU-composited, no layout impact ── */
+#hBgImg{
+  /* Extend slightly beyond bounds to absorb parallax travel without gap.
+     The scale(1.05) also helps cover this, but the extra height is cheap
+     insurance for fast scrollers and tall viewports. */
+  top: -8%;
+  bottom: -8%;
+  left: 0;
+  right: 0;
+  inset: unset; /* override the inset:0 shorthand from base rule */
+  position: absolute;
+  /* Transform origin center — scale grows outward symmetrically */
+  transform-origin: center center;
+  /* Promote to own compositor layer */
+  will-change: transform, opacity;
+  /* Smooth the JS-driven values; duration 0 = JS owns easing fully */
+  transition: none;
+}
+
+/* ── Rising content section ── */
+.cst-riser{
+  position: relative;
+  /* Sits above the hero in paint order */
+  z-index: 2;
+  /* GPU layer for transform */
+  will-change: transform;
+  /* Tight top-radius creates the "card emerging" feel */
+  border-radius: 18px 18px 0 0;
+  /* Clip so rounded corners work cleanly */
+  overflow: hidden;
+}
+
+/* ── Inset depth shadow at the top of the rising section ──
+   Mimics the shadow cast by a card sliding over a surface.
+   Composited purely as a box-shadow → no repaint cost. ── */
+.cst-riser::before{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 60px;
+  /* Inset shadow: darkens the top edge as it rises over the image */
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,.18) 0%,
+    rgba(0,0,0,.06) 45%,
+    transparent 100%
+  );
+  z-index: 3;
+  pointer-events: none;
+  /* Fade the shadow in as the riser clears the hero */
+  opacity: 0;
+  transition: opacity .1s linear;
+}
+.cst-riser.cst-active::before{
+  opacity: 1;
+}
+
+/* ── Remove border-radius on mobile (full-bleed feel) ── */
+@media(max-width: 640px){
+  .cst-riser{
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+/* ── Reduced-motion: zero out ALL cinematic motion ──
+   Users who prefer reduced motion get a clean, instant
+   section transition with no parallax or scale. ── */
+@media(prefers-reduced-motion: reduce){
+  #hBgImg{
+    top: 0 !important;
+    bottom: 0 !important;
+    will-change: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  .cst-riser{
+    will-change: auto !important;
+    transform: none !important;
+    border-radius: 0 !important;
+  }
+  .cst-riser::before{
+    display: none !important;
+  }
+}
 
 </style>
  </head>
@@ -2428,7 +2613,7 @@ body{background:var(--bg);}
        │   └─ Info Block (.shInfo)
        └─ Image URL Data (hidden data-source element #fsImageData)
        ========================================================= -->
-  <section id="featured">
+  <section id="featured" class="cst-riser">
     <!-- ── Section Header ── -->
     <div class="fsHdr">
       <div class="secT">FEATURED <span class="s">✦</span></div>
@@ -2779,6 +2964,10 @@ body{background:var(--bg);}
         <div style="font-size:.68rem;opacity:.6;margin-top:.2rem;">BE THE FIRST TO LEAVE ONE</div>
       </div>
       <!-- Dynamically added comments will go here -->
+      <!-- Pull-to-refresh spinner (appears when scrolled past last comment) -->
+      <div class="cpRefreshWrap" id="cpRefreshWrap" aria-hidden="true">
+        <div class="cpRefreshSpinner"></div>
+      </div>
     </div>
   </div>
 
@@ -3225,7 +3414,21 @@ body{background:var(--bg);}
     if(g) g.innerHTML = images.map(itemHTML).join('');
   }
 
+  /* ── Gallery pagination state ──
+     fgVisible: how many items are currently shown.
+     Initial load: 30 on mobile/tablet (< 1025px), 50 on desktop.
+     Each "Load More" press adds exactly 20 more, regardless of device. */
+  var fgVisible = 0;
+  var FG_LOAD_MORE_STEP = 20;
+  function fgInitialLoad(){ return window.innerWidth >= 1025 ? 50 : 30; }
+
   function renderFG(){
+    /* Reset to initial batch whenever query/filters change */
+    fgVisible = fgInitialLoad();
+    _renderFGPage();
+  }
+
+  function _renderFGPage(){
     const q=document.getElementById('fgQ').value.toLowerCase().trim();
     const c=document.getElementById('fgC');
     let imgs=[...images];
@@ -3243,11 +3446,35 @@ body{background:var(--bg);}
       return filterSrt==='new'?(idB-idA):(idA-idB);
     });
     if(!imgs.length){c.innerHTML='<div class="fgEmp">NO ARTWORK FOUND</div>';return;}
-    c.innerHTML=`<div class="fgGrid fg${filterGrid}">${imgs.map(itemHTML).join('')}</div>`;
+
+    /* Clamp fgVisible so it never exceeds total */
+    var showCount = Math.min(fgVisible, imgs.length);
+    var visible = imgs.slice(0, showCount);
+    var hasMore = showCount < imgs.length;
+
+    /* Rebuild grid */
+    var gridHtml = `<div class="fgGrid fg${filterGrid}">${visible.map(itemHTML).join('')}</div>`;
+
+    /* Load More button — always adds 20 more */
+    var moreHtml = hasMore
+      ? `<div class="fgLoadMoreWrap"><button class="fgLoadMore" onclick="fgLoadMore()" aria-label="Load more artworks"><span>✦</span> LOAD MORE</button></div>`
+      : '';
+
+    c.innerHTML = gridHtml + moreHtml;
+
     /* Update filter button active indicator */
     const isFiltered=(filterCat!=='all'||filterSrt!=='new'||filterGrid!==4);
     const btn=document.getElementById('fgFltBtn');
     if(btn)btn.classList.toggle('active',isFiltered);
+  }
+
+  /* Each press adds exactly 20 more items, preserving scroll position */
+  function fgLoadMore(){
+    fgVisible += FG_LOAD_MORE_STEP;
+    var fgEl = document.getElementById('fg');
+    var scrollY = fgEl ? fgEl.scrollTop : 0;
+    _renderFGPage();
+    if(fgEl) fgEl.scrollTop = scrollY;
   }
 
   function openFilterPanel(){
@@ -3272,10 +3499,11 @@ body{background:var(--bg);}
     filterCat=catR?catR.value:'all';
     filterSrt=srtR?srtR.value:'new';
     filterGrid=grdR?parseInt(grdR.value,10):4;
+    fgVisible=fgInitialLoad();
     closeFilterPanel();
     renderFG();
   }
-  function openFG(){document.getElementById('fg').classList.add('open');document.body.style.overflow='hidden';renderFG();
+  function openFG(){document.getElementById('fg').classList.add('open');document.body.style.overflow='hidden';fgVisible=fgInitialLoad();renderFG();
     /* FIXED: A11Y-002 */
     setTimeout(function(){
       var q = document.getElementById('fgQ');
@@ -3287,6 +3515,7 @@ body{background:var(--bg);}
     restoreScroll();
     /* Reset category filter to 'all' so next open is always clean */
     filterCat = 'all';
+    fgVisible = fgInitialLoad();
     var catR = document.querySelector('input[name="fltCat"][value="all"]');
     if(catR) catR.checked = true;
   }
@@ -4205,6 +4434,8 @@ function hideCommentThumbnail(){
 
 async function openComments(){
     closeMenu();
+    /* Reset offset so each fresh open starts at the initial load amount */
+    cpOffset = 0;
     var page = document.getElementById('commentsPage');
     page.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -4238,24 +4469,45 @@ async function openComments(){
     document.documentElement.style.overflow = '';
   }
 
+  /* ── Comments pagination state ──
+     cpOffset: how many comments back from the end are currently shown.
+     Initial: 20 (mobile/tablet < 1025px) or 50 (desktop).
+     Each pull-to-refresh adds exactly 20 more older comments. */
+  var cpOffset = 0; /* set properly in cpRender on first call */
+  var CP_INITIAL_LOAD = function(){ return window.innerWidth >= 1025 ? 50 : 20; };
+  var CP_LOAD_STEP = 20;
+
   function cpRender(){
     var body  = document.getElementById('cpBody');
     var empty = document.getElementById('cpEmpty');
     if(!body) return;
 
-    /* Remove existing rendered comments (keep #cpEmpty) */
+    /* Remove existing rendered comments (keep #cpEmpty and #cpRefreshWrap) */
     body.querySelectorAll('.cpComment').forEach(function(el){ el.remove(); });
 
     if(cpComments.length === 0){
       if(empty) empty.style.display = 'flex';
+      /* Reset offset so next open starts fresh */
+      cpOffset = CP_INITIAL_LOAD();
       return;
     }
     if(empty) empty.style.display = 'none';
 
-    cpComments.forEach(function(c){
+    /* On first render (cpOffset === 0) seed it to initial amount */
+    if(cpOffset === 0) cpOffset = CP_INITIAL_LOAD();
+
+    /* Clamp so we never ask for more than we have */
+    var showCount = Math.min(cpOffset, cpComments.length);
+    /* Slice from the end so we always show the most recent ones,
+       but as offset grows we walk further back in history */
+    var toShow = cpComments.slice(cpComments.length - showCount);
+
+    /* Insert before the refresh spinner so spinner stays at bottom */
+    var spinner = document.getElementById('cpRefreshWrap');
+
+    toShow.forEach(function(c){
       var div = document.createElement('div');
       div.className = 'cpComment' + (c.image_url ? ' hasImage' : '');
-      /* Show image thumbnail if comment has an image_url */
       var thumbHtml = '';
       if(c.image_url){
         var safeUrl = esc(c.image_url);
@@ -4269,12 +4521,62 @@ async function openComments(){
           '<div class="cpCommentText">' + esc(c.text) + '</div>' +
           '<div class="cpCommentTime">' + esc(c.time) + '</div>' +
         '</div>';
-      body.appendChild(div);
+      if(spinner) { body.insertBefore(div, spinner); }
+      else { body.appendChild(div); }
     });
 
-    /* Oldest-first — scroll to bottom so newest comment is visible */
+    /* Scroll to bottom so newest comment is visible */
     body.scrollTop = body.scrollHeight;
   }
+
+  /* ── Pull-to-refresh: show spinner at bottom when scrolled past last comment.
+     Each trigger adds 20 more older comments (cpOffset += 20) then re-fetches
+     to catch any truly new ones. Repeats indefinitely until all are shown. */
+  (function(){
+    var _cpRefreshing = false;
+    var _cpRefreshTimer = null;
+
+    function cpTriggerRefresh(){
+      if(_cpRefreshing) return;
+      _cpRefreshing = true;
+      var wrap = document.getElementById('cpRefreshWrap');
+      if(wrap) wrap.classList.add('visible');
+
+      /* Extend the visible window by 20 more older comments */
+      cpOffset += CP_LOAD_STEP;
+
+      cpLoadComments().then(function(){
+        /* Keep spinner visible for at least 800ms so it feels intentional */
+        setTimeout(function(){
+          if(wrap) wrap.classList.remove('visible');
+          _cpRefreshing = false;
+        }, 800);
+      }).catch(function(){
+        if(wrap) wrap.classList.remove('visible');
+        _cpRefreshing = false;
+      });
+    }
+
+    /* Attach scroll listener once the DOM is ready */
+    document.addEventListener('DOMContentLoaded', function(){
+      var body = document.getElementById('cpBody');
+      if(!body) return;
+
+      body.addEventListener('scroll', function(){
+        /* Trigger when within 40px of the scrollable bottom */
+        var nearBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 40;
+        if(nearBottom && !_cpRefreshing){
+          clearTimeout(_cpRefreshTimer);
+          _cpRefreshTimer = setTimeout(function(){
+            var page = document.getElementById('commentsPage');
+            if(page && page.classList.contains('open')){
+              cpTriggerRefresh();
+            }
+          }, 300);
+        }
+      }, {passive:true});
+    });
+  })();
 
   async function cpSend(){
     var inp=document.getElementById('cpBarInput');
@@ -4979,6 +5281,178 @@ async function openComments(){
 </script>
 <!-- ════════════════════════════════════════════════════════
      END LEGAL MODAL JS
+     ════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════
+     CINEMATIC SCROLL TRANSITION ENGINE
+     ════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ── Respect prefers-reduced-motion at JS level too ── */
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(mq && mq.matches) return;
+
+  /* ── Element refs ── */
+  var hero   = document.getElementById('hero');
+  var bgImg  = document.getElementById('hBgImg');
+  var riser  = document.querySelector('.cst-riser');
+
+  if(!hero || !bgImg || !riser) return;
+
+  /* ── Config ──────────────────────────────────────────────
+     PARALLAX_RATE  : how much slower the bg moves vs scroll
+                      0 = locked, 1 = moves at full scroll speed.
+                      0.35 = bg moves at 35% of scroll speed →
+                      subtle depth without being distracting.
+     SCALE_MAX      : maximum scale applied to bg at rest (1.0)
+                      as scroll goes from 0 → heroH, scale goes
+                      1.05 → 1.0 (zooms in at top, normalises as
+                      you scroll — gives the cinematic "pull back"
+                      feel on load without jarring motion).
+     RISE_LEAD_PX   : how many px before the hero bottom the riser
+                      starts moving. Larger = earlier rise start.
+     OPACITY_START  : fraction of heroH at which bg starts fading.
+     OPACITY_END    : fraction of heroH at which bg is fully gone.
+  ── */
+  var PARALLAX_RATE  = 0.35;
+  var SCALE_MAX      = 1.05;
+  var SCALE_MIN      = 1.0;
+  var RISE_LEAD_PX   = 220;
+  var OPACITY_START  = 0.55;
+  var OPACITY_END    = 0.88;
+
+  /* ── State ── */
+  var rafId        = null;
+  var lastScrollY  = -1;
+  var heroH        = 0;
+  var heroActive   = true; /* set false by IntersectionObserver */
+
+  /* ── Clamp helper ── */
+  function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+
+  /* ── Ease out cubic — smooth deceleration ── */
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+  /* ── Measure hero height (cheap, cached) ── */
+  function measureHero(){
+    heroH = hero.offsetHeight;
+  }
+
+  /* ── Core frame update ──────────────────────────────────
+     All writes happen in a single rAF callback.
+     Only transform + opacity are modified → compositor-only.
+  ── */
+  function applyFrame(){
+    rafId = null;
+    if(!heroActive) return;
+
+    var sy = window.scrollY;
+
+    /* Parallax: bg translates upward at PARALLAX_RATE * scroll */
+    var parallaxY = sy * PARALLAX_RATE;
+
+    /* Scale: starts at SCALE_MAX when sy=0, falls to SCALE_MIN at heroH */
+    var scaleProgress = clamp(sy / (heroH || 1), 0, 1);
+    var scale = SCALE_MAX - (SCALE_MAX - SCALE_MIN) * easeOutCubic(scaleProgress);
+
+    /* Opacity: fades the bg as the riser covers it */
+    var opProgress = clamp(
+      (scaleProgress - OPACITY_START) / (OPACITY_END - OPACITY_START),
+      0, 1
+    );
+    var bgOpacity = 1 - easeOutCubic(opProgress);
+
+    /* Riser translateY: starts rising RISE_LEAD_PX before hero bottom.
+       riserOffset goes from +RISE_LEAD_PX (off by that much at start)
+       to 0 (fully settled) as scroll reaches heroH. */
+    var riserProgress = clamp(
+      (sy - (heroH - RISE_LEAD_PX)) / RISE_LEAD_PX,
+      0, 1
+    );
+    /* Use an ease that accelerates in then decelerates — feels physical */
+    var riserEased = easeOutCubic(riserProgress);
+    /* translateY: starts at RISE_LEAD_PX, eases to 0 */
+    var riserY = RISE_LEAD_PX * (1 - riserEased);
+
+    /* Apply — only transform + opacity, always on compositor layers */
+    bgImg.style.transform  = 'scale(' + scale.toFixed(4) + ') translateY(' + (-parallaxY).toFixed(2) + 'px)';
+    bgImg.style.opacity    = bgOpacity.toFixed(3);
+    riser.style.transform  = 'translateY(' + riserY.toFixed(2) + 'px)';
+
+    /* Toggle depth shadow when riser has risen enough to overlap hero */
+    if(riserProgress > 0.05){
+      riser.classList.add('cst-active');
+    } else {
+      riser.classList.remove('cst-active');
+    }
+  }
+
+  /* ── rAF-gated scroll handler ──────────────────────────── */
+  function onScroll(){
+    var sy = window.scrollY;
+    if(sy === lastScrollY) return;
+    lastScrollY = sy;
+    if(rafId === null){
+      rafId = requestAnimationFrame(applyFrame);
+    }
+  }
+
+  /* ── IntersectionObserver: pause rAF when hero entirely off-screen ──
+     This prevents wasted rAF budget when the user is deep in the page. */
+  var io = new IntersectionObserver(function(entries){
+    heroActive = entries[0].isIntersecting;
+    if(heroActive){
+      /* Re-arm: make sure we paint the current state immediately */
+      if(rafId === null) rafId = requestAnimationFrame(applyFrame);
+    }
+  }, {
+    rootMargin: '200px 0px 0px 0px', /* fire a bit early so frame is ready */
+    threshold: 0
+  });
+  io.observe(hero);
+
+  /* ── ResizeObserver: re-measure on resize / orientation change ──
+     Avoids stale heroH causing wrong parallax math after resize. */
+  var ro = (typeof ResizeObserver !== 'undefined')
+    ? new ResizeObserver(function(){ measureHero(); applyFrame(); })
+    : null;
+  if(ro) ro.observe(hero);
+
+  /* ── Initial measurement + first paint ── */
+  measureHero();
+
+  /* ── Kick off on first real scroll tick ── */
+  window.addEventListener('scroll', onScroll, {passive: true});
+
+  /* ── Apply once on load (in case page is restored mid-scroll) ── */
+  if(document.readyState === 'complete'){
+    applyFrame();
+  } else {
+    window.addEventListener('load', applyFrame, {once: true});
+  }
+
+  /* ── Also re-run after intro screen hides (Digiartz splash) ──
+     The intro is position:fixed so it doesn't affect scrollY, but
+     firing once after it hides ensures the first visible frame is correct. */
+  var introEl = document.getElementById('intro');
+  if(introEl){
+    introEl.addEventListener('transitionend', function(){
+      measureHero();
+      applyFrame();
+    }, {once: true});
+  }
+
+  /* ── Mobile: iOS Safari reports wrong innerHeight before resize event.
+     Re-measure after 150ms on orientation change. ── */
+  window.addEventListener('orientationchange', function(){
+    setTimeout(function(){ measureHero(); applyFrame(); }, 150);
+  });
+
+})();
+</script>
+<!-- ════════════════════════════════════════════════════════
+     END CINEMATIC SCROLL TRANSITION ENGINE
      ════════════════════════════════════════════════════════ -->
 </body>
 </html>
