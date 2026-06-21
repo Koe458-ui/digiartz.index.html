@@ -1812,6 +1812,56 @@ body.admin .hEBg{display:flex;}
     /* ═══════════════════════════════════════════════
        FEATURED SHOWCASE CSS
        ═══════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════════════════
+       WEBSITE TEMPLATES SHOWCASE — carousel, mirrors #featured
+       ══════════════════════════════════════════════════════════ */
+    #wtShowcase{padding:5rem 0 3rem;overflow:hidden;}
+    #wtShowcase .fsHdr{max-width:1200px;margin:0 auto;padding:0 2rem;}
+    /* Carousel track wrapper — same max-width/padding as .shWrap */
+    .wtscWrap{max-width:1200px;margin:2.5rem auto 0;padding:0 2rem;}
+    /* Overflow clip so only one card is visible */
+    .wtscClip{overflow:hidden;position:relative;}
+    /* Slide track — flexbox, each slide is 100% wide */
+    .wtscTrack{
+      display:flex;
+      transition:transform .45s cubic-bezier(.22,1,.36,1);
+      will-change:transform;
+    }
+    /* Each slide holds one wtCard; force full width */
+    .wtscSlide{
+      flex:0 0 100%;
+      min-width:0;
+      cursor:pointer;
+    }
+    /* Override animation stagger inside carousel — all slides same timing */
+    .wtscSlide .wtCard{
+      animation:none;
+      cursor:pointer;
+    }
+    /* Navigation dots — same visual DNA as .apDot */
+    .wtscDots{
+      display:flex;
+      justify-content:center;
+      gap:.55rem;
+      margin-top:1.2rem;
+    }
+    .wtscDot{
+      width:6px;height:6px;
+      border-radius:50%;
+      background:var(--bdrh);
+      border:none;
+      padding:0;
+      cursor:pointer;
+      transition:background .25s,transform .25s;
+    }
+    .wtscDot.active{
+      background:var(--pg);
+      transform:scale(1.35);
+      box-shadow:0 0 6px var(--pg);
+    }
+    /* Touch swipe: disable text selection during drag */
+    .wtscClip.wtsc--dragging{user-select:none;}
+
     #featured{padding:5rem 0 3rem;overflow:hidden;}
     .fsHdr{max-width:1200px;margin:0 auto;padding:0 2rem;}
     /* Black placeholder for empty/missing URLs */
@@ -4236,6 +4286,34 @@ body.admin .wtCardAdm { display: flex; }
  <input accept="image/*" id="bgF" onchange="handleBg(event)" type="file"/>
  <label for="bgF" class="srOnly">Choose hero background image</label>
 </section>
+  <!-- =========================================================
+       WEBSITE TEMPLATES SHOWCASE
+       Carousel of the 3 newest website templates. Clicking any
+       card opens the Website Templates page. Mirrors the visual
+       design of the Featured Showcase section.
+       ├─ Section Header (.fsHdr)
+       ├─ Carousel Wrapper (.wtscWrap)
+       │   ├─ Clip (.wtscClip)
+       │   │   └─ Track (.wtscTrack)
+       │   │       └─ Slides (.wtscSlide × 3) — injected by JS
+       │   └─ Dots (.wtscDots)
+       └─ Populated by initWtShowcase() on page load
+       ========================================================= -->
+  <section id="wtShowcase">
+    <div class="fsHdr">
+      <div class="secT">WEBSITE TEMPLATES <span class="s">✦</span></div>
+    </div>
+    <div class="wtscWrap">
+      <div class="wtscClip" id="wtscClip">
+        <div class="wtscTrack" id="wtscTrack">
+          <!-- Slides injected by JS -->
+        </div>
+      </div>
+      <div class="wtscDots" id="wtscDots" aria-label="Template carousel navigation"></div>
+    </div>
+  </section>
+  <!-- WEBSITE TEMPLATES SHOWCASE END -->
+
   <!-- =========================================================
        FEATURED SHOWCASE
        ├─ Section Header (.fsHdr)
@@ -7276,6 +7354,7 @@ async function openComments(){
     spawnPts();
     await loadDB();
     applyBg();renderHome();
+    if(typeof window.initWtShowcase==='function') window.initWtShowcase();
     var m = window.location.pathname.match(/^\/artwork\/([^/]+)\/?$/);
     if(m) openArtworkById(m[1], false);
     /* Site-wide ImageGallery structured data — lists every artwork's
@@ -7438,6 +7517,169 @@ async function openComments(){
   })();
   /* ═══════════════════════════════════════════════════════════
      END SHOWCASE CARD JAVASCRIPT
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ═══════════════════════════════════════════════════════════
+     WEBSITE TEMPLATES SHOWCASE CAROUSEL
+     ├─ Displays the 3 newest templates from Supabase
+     ├─ 1 card visible at a time, infinite-loop carousel
+     ├─ Auto-slides every 4 seconds
+     ├─ Touch/pointer swipe support
+     ├─ Navigation dots
+     └─ Clicking any card opens openWebTemplates()
+     ═══════════════════════════════════════════════════════════ */
+  (function(){
+    var SLIDE_INTERVAL = 4000; /* ms between auto-advances */
+    var track  = document.getElementById('wtscTrack');
+    var clip   = document.getElementById('wtscClip');
+    var dotsEl = document.getElementById('wtscDots');
+    var templates = [];  /* up to 3 newest */
+    var current  = 0;
+    var total    = 0;
+    var autoTimer = null;
+
+    /* ── Build card HTML (re-uses wtCardHTML shape) ── */
+    function cardHTMLForShowcase(t){
+      var tier = t.tier || 'free';
+      var tierClasses = {free:'wtCard--free',lite:'wtCard--lite',premium:'wtCard--premium',max:'wtCard--max'};
+      var badgeClasses= {free:'wtTierBadge--free',lite:'wtTierBadge--lite',premium:'wtTierBadge--premium',max:'wtTierBadge--max'};
+      var tierLabels  = {free:'Free',lite:'Premium Lite',premium:'Premium',max:'Max'};
+      var tc = tierClasses[tier] || 'wtCard--free';
+      var bc = badgeClasses[tier] || 'wtTierBadge--free';
+      var tl = tierLabels[tier] || 'Free';
+      var nm = t.name ? t.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : 'Untitled';
+      var sd = t.short_desc ? t.short_desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+      var imgBlock = t.preview_url
+        ? '<img class="wtCardImg" src="' + t.preview_url + '" alt="' + nm + '" loading="lazy" decoding="async"/>'
+        : '<div class="wtCardImgPlaceholder">◧</div>';
+
+      return '<div class="wtCard ' + tc + '">' +
+        '<div class="wtCardImgWrap">' + imgBlock + '</div>' +
+        '<div class="wtCardBdy">' +
+          '<div class="wtCardTitleRow">' +
+            '<div class="wtCardTitle">' + nm + '</div>' +
+            '<span class="wtTierBadge ' + bc + '">' + tl + '</span>' +
+          '</div>' +
+          '<div class="wtCardDesc">' + sd + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    /* ── Build dots ── */
+    function buildDots(){
+      dotsEl.innerHTML = '';
+      for(var i = 0; i < total; i++){
+        var btn = document.createElement('button');
+        btn.className = 'wtscDot' + (i === 0 ? ' active' : '');
+        btn.setAttribute('aria-label', 'Go to template ' + (i + 1));
+        btn.dataset.idx = i;
+        btn.addEventListener('click', function(){
+          goTo(parseInt(this.dataset.idx, 10));
+          resetTimer();
+        });
+        dotsEl.appendChild(btn);
+      }
+    }
+
+    /* ── Sync track position and dots ── */
+    function syncUI(){
+      track.style.transform = 'translateX(-' + (current * 100) + '%)';
+      var dots = dotsEl.querySelectorAll('.wtscDot');
+      dots.forEach(function(d, i){ d.classList.toggle('active', i === current); });
+    }
+
+    /* ── Navigate to a slide (infinite loop) ── */
+    function goTo(idx){
+      current = ((idx % total) + total) % total;
+      syncUI();
+    }
+
+    function next(){ goTo(current + 1); }
+    function prev(){ goTo(current - 1); }
+
+    /* ── Auto-slide ── */
+    function startTimer(){
+      stopTimer();
+      autoTimer = setInterval(next, SLIDE_INTERVAL);
+    }
+    function stopTimer(){ clearInterval(autoTimer); }
+    function resetTimer(){ stopTimer(); startTimer(); }
+
+    /* ── Touch / pointer swipe ── */
+    var swipeStartX = null;
+    var didSwipe = false;
+    clip.addEventListener('pointerdown', function(e){
+      swipeStartX = e.clientX;
+      didSwipe = false;
+      clip.classList.add('wtsc--dragging');
+    });
+    clip.addEventListener('pointermove', function(e){
+      if(swipeStartX === null) return;
+      /* Prevent scroll during deliberate horizontal swipe */
+      if(Math.abs(e.clientX - swipeStartX) > 8) e.preventDefault();
+    }, { passive: false });
+    clip.addEventListener('pointerup', function(e){
+      if(swipeStartX === null){ clip.classList.remove('wtsc--dragging'); return; }
+      var dx = e.clientX - swipeStartX;
+      swipeStartX = null;
+      clip.classList.remove('wtsc--dragging');
+      if(dx < -40){ didSwipe = true; next(); resetTimer(); }
+      else if(dx > 40){ didSwipe = true; prev(); resetTimer(); }
+    });
+    clip.addEventListener('pointercancel', function(){
+      swipeStartX = null;
+      didSwipe = false;
+      clip.classList.remove('wtsc--dragging');
+    });
+
+    /* ── Click card → open Website Templates ── */
+    clip.addEventListener('click', function(){
+      if(didSwipe){ didSwipe = false; return; }
+      openWebTemplates();
+    });
+
+    /* ── Render ── */
+    function render(list){
+      templates = list.slice(0, 3);
+      total = templates.length;
+      if(!total){
+        /* No templates: hide the section entirely */
+        var sec = document.getElementById('wtShowcase');
+        if(sec) sec.style.display = 'none';
+        return;
+      }
+      /* Show section in case it was hidden */
+      var sec = document.getElementById('wtShowcase');
+      if(sec) sec.style.display = '';
+
+      /* Build slides */
+      track.innerHTML = templates.map(function(t){
+        return '<div class="wtscSlide">' + cardHTMLForShowcase(t) + '</div>';
+      }).join('');
+
+      current = 0;
+      buildDots();
+      syncUI();
+      startTimer();
+    }
+
+    /* ── Fetch newest 3 templates from Supabase ── */
+    async function loadShowcase(){
+      if(!sb) return;
+      try{
+        var res = await sb.from('web_templates').select('id,name,short_desc,preview_url,tier,created_at').order('created_at',{ascending:false}).limit(3);
+        if(res.error) throw res.error;
+        render(res.data || []);
+      }catch(e){
+        console.error('wtShowcase load:', e);
+      }
+    }
+
+    /* Expose so init() can call it after Supabase is ready */
+    window.initWtShowcase = loadShowcase;
+  })();
+  /* ═══════════════════════════════════════════════════════════
+     END WEBSITE TEMPLATES SHOWCASE CAROUSEL
      ═══════════════════════════════════════════════════════════ */
 
   /* ══════════════════════════════════════════════════════════
