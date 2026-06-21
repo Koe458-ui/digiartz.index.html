@@ -2035,6 +2035,132 @@ height:80px;
 
 
 /* ═══════════════════════════════════════════════
+   WEBSITE TEMPLATES SHOWCASE
+   ═══════════════════════════════════════════════ */
+#wtShowcase { padding: 4rem 0 3rem; overflow: hidden; }
+
+/* Outer wrapper — same max-width/padding as .shWrap */
+.wtsc-wrap {
+  max-width: 1200px;
+  margin: 2.5rem auto 0;
+  padding: 0 2rem;
+}
+
+/* The "card box" — same look as .shCard but single-column */
+.wtsc-box {
+  background: color-mix(in srgb, var(--sur) 88%, transparent);
+  border: 1px solid var(--bdr);
+  border-radius: 4px;
+  box-shadow:
+    0 2px 6px  rgba(0,0,0,.14),
+    0 10px 28px rgba(0,0,0,.13),
+    0 28px 56px rgba(0,0,0,.10),
+    0 48px 80px rgba(0,0,0,.06);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* Slider viewport — clips overflowing slides */
+.wtsc-slider {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  cursor: grab;
+  user-select: none;
+}
+.wtsc-slider:active { cursor: grabbing; }
+
+/* Track — all slides in one row */
+.wtsc-track {
+  display: flex;
+  transition: transform .45s cubic-bezier(.22,1,.36,1);
+  will-change: transform;
+}
+
+/* Each slide = one wtCard clone, fixed width = 100% of viewport */
+.wtsc-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  pointer-events: none; /* tap handled by box click */
+}
+/* Re-enable pointer events on inner card so hover still works */
+.wtsc-slide .wtCard {
+  pointer-events: auto;
+  cursor: pointer;
+  margin: 0;
+  border-radius: 4px;
+  animation: none; /* no stagger in showcase */
+}
+/* Disable admin buttons inside showcase cards */
+.wtsc-slide .wtCardAdm { display: none !important; }
+
+/* Bottom bar: dots + footer button */
+.wtsc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 .2rem;
+}
+
+/* Dot indicators */
+.wtsc-dots {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+}
+.wtsc-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--bdrh);
+  transition: background .3s, transform .3s;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+.wtsc-dot.active {
+  background: var(--pg);
+  transform: scale(1.35);
+}
+
+/* View all button — same style as .shBtn */
+.wtsc-viewBtn {
+  padding: .75rem 1.5rem;
+  border: 1px solid var(--bdr);
+  background: transparent;
+  color: var(--ps);
+  font-family: var(--fm);
+  font-size: .72rem;
+  letter-spacing: .18em;
+  cursor: pointer;
+  transition: border-color .3s, background .3s;
+  border-radius: 6px;
+  box-shadow:
+    0 2px 4px  rgba(0,0,0,.14),
+    0 6px 14px rgba(0,0,0,.11),
+    0 14px 28px rgba(0,0,0,.07);
+}
+.wtsc-viewBtn:hover { border-color: var(--pg); background: var(--pdim); }
+
+/* Empty state */
+.wtsc-empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  font-family: var(--fm);
+  font-size: .8rem;
+  letter-spacing: .2em;
+  color: var(--txd);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .wtsc-wrap { padding: 0 1.2rem; }
+  .wtsc-box  { padding: 1rem; gap: .9rem; }
+}
+
+/* ═══════════════════════════════════════════════
    AD SHIMMER KEYFRAME
    Shared by .apCard (Sponsor Panel)
    ═══════════════════════════════════════════════ */
@@ -4356,6 +4482,41 @@ body.admin .wtCardAdm { display: flex; }
     <div id="charEmpty" style="display:none;padding:3rem 2rem;text-align:center;font-family:var(--fm);font-size:.8rem;letter-spacing:.2em;color:var(--txd);">NO CHARACTER ARTWORK YET</div>
   </section>
   <!-- CHARACTERS SHOWCASE END -->
+
+  <!-- =========================================================
+       WEBSITE TEMPLATES SHOWCASE
+       ├─ Section Header (.fsHdr)
+       ├─ Showcase Box (.wtsc-wrap > .wtsc-box)
+       │   ├─ Slider Viewport (.wtsc-slider)
+       │   │   └─ Track (.wtsc-track)
+       │   │       └─ Slides (.wtsc-slide × 3)  — injected by JS
+       │   └─ Footer (.wtsc-footer)
+       │       ├─ Dot Indicators (.wtsc-dots)
+       │       └─ View All Button (.wtsc-viewBtn)
+       └─ Empty State (.wtsc-empty)
+       ========================================================= -->
+  <section id="wtShowcase">
+    <div class="fsHdr">
+      <div class="secT">WEBSITE TEMPLATES <span class="s">✦</span></div>
+      <div class="secSub">LATEST DROPS</div>
+    </div>
+    <div class="wtsc-wrap">
+      <div class="wtsc-box" id="wtscBox">
+        <!-- Slider — slides injected by wtscRender() -->
+        <div class="wtsc-slider" id="wtscSlider">
+          <div class="wtsc-track" id="wtscTrack"></div>
+        </div>
+        <!-- Footer: dots + button -->
+        <div class="wtsc-footer">
+          <div class="wtsc-dots" id="wtscDots"></div>
+          <button class="wtsc-viewBtn" onclick="openWebTemplates()">VIEW ALL TEMPLATES →</button>
+        </div>
+        <!-- Empty fallback -->
+        <div class="wtsc-empty" id="wtscEmpty" style="display:none;">NO TEMPLATES YET</div>
+      </div>
+    </div>
+  </section>
+  <!-- WEBSITE TEMPLATES SHOWCASE END -->
 
   <!-- =========================================================
        ABOUT SECTION
@@ -7437,6 +7598,154 @@ async function openComments(){
     window.rebuildGalCarousels([]);
   })();
   /* ═══════════════════════════════════════════════════════════
+    /* ── Website Templates Showcase ── */
+    (function(){
+      var WTSC_AUTO_MS  = 4000;   /* auto-advance interval */
+      var WTSC_MAX      = 3;      /* max slides to show */
+      var wtscIdx       = 0;      /* current slide index */
+      var wtscTotal     = 0;      /* how many slides rendered */
+      var wtscTimer     = null;   /* setInterval handle */
+      var wtscDragging  = false;
+      var wtscDragX     = 0;
+
+      /* Kick off: wait for wtTemplates to be populated, retry if empty */
+      function wtscInit() {
+        if (wtTemplates && wtTemplates.length > 0) {
+          wtscRender();
+        } else {
+          /* Poll until data arrives (wtLoadTemplates runs async on first open;
+             here we trigger a quiet fetch so showcase populates on page load) */
+          wtscFetch();
+        }
+      }
+
+      async function wtscFetch() {
+        if (!sb) return;
+        try {
+          var res = await sb.from('web_templates').select('*').order('created_at', { ascending: false }).limit(WTSC_MAX);
+          if (res.error) throw res.error;
+          var items = res.data || [];
+          wtscRenderItems(items);
+        } catch(e) {
+          console.warn('wtsc fetch:', e);
+        }
+      }
+
+      function wtscRender() {
+        /* Use first 3 from cached wtTemplates array */
+        var items = wtTemplates.slice(0, WTSC_MAX);
+        wtscRenderItems(items);
+      }
+
+      function wtscRenderItems(items) {
+        var track   = document.getElementById('wtscTrack');
+        var dots    = document.getElementById('wtscDots');
+        var empty   = document.getElementById('wtscEmpty');
+        var slider  = document.getElementById('wtscSlider');
+        var box     = document.getElementById('wtscBox');
+        if (!track) return;
+
+        if (!items || items.length === 0) {
+          track.innerHTML   = '';
+          dots.innerHTML    = '';
+          if (empty)  empty.style.display  = '';
+          if (slider) slider.style.display = 'none';
+          return;
+        }
+
+        if (empty)  empty.style.display  = 'none';
+        if (slider) slider.style.display = '';
+
+        wtscTotal = items.length;
+        wtscIdx   = 0;
+
+        /* Build slides using the same wtCardHTML helper */
+        track.innerHTML = items.map(function(t) {
+          return '<div class="wtsc-slide">' + wtCardHTML(t) + '</div>';
+        }).join('');
+
+        /* Attach click → openWebTemplates on each slide */
+        Array.from(track.querySelectorAll('.wtsc-slide')).forEach(function(slide) {
+          slide.addEventListener('click', function() { openWebTemplates(); });
+        });
+
+        /* Build dots */
+        dots.innerHTML = items.map(function(_, i) {
+          return '<button class="wtsc-dot' + (i === 0 ? ' active' : '') + '" aria-label="Slide ' + (i+1) + '" onclick="wtscGoTo(' + i + ')"></button>';
+        }).join('');
+
+        /* Drag / swipe support */
+        wtscBindDrag(slider);
+
+        /* Start auto-advance */
+        wtscAutoStart();
+      }
+
+      /* Move to slide n */
+      window.wtscGoTo = function(n) {
+        if (wtscTotal === 0) return;
+        wtscIdx = ((n % wtscTotal) + wtscTotal) % wtscTotal;
+        var track = document.getElementById('wtscTrack');
+        if (track) track.style.transform = 'translateX(-' + (wtscIdx * 100) + '%)';
+        /* Update dots */
+        var dots = document.getElementById('wtscDots');
+        if (dots) {
+          Array.from(dots.querySelectorAll('.wtsc-dot')).forEach(function(d, i) {
+            d.classList.toggle('active', i === wtscIdx);
+          });
+        }
+      };
+
+      function wtscAutoStart() {
+        if (wtscTimer) clearInterval(wtscTimer);
+        if (wtscTotal <= 1) return;
+        wtscTimer = setInterval(function() {
+          if (!wtscDragging) wtscGoTo(wtscIdx + 1);
+        }, WTSC_AUTO_MS);
+      }
+
+      /* Touch / mouse drag */
+      function wtscBindDrag(el) {
+        if (!el) return;
+        /* Remove old listeners by cloning — safe since el has no other listeners */
+        var fresh = el.cloneNode(true);
+        /* Re-attach click listeners on cloned slides */
+        Array.from(fresh.querySelectorAll('.wtsc-slide')).forEach(function(slide) {
+          slide.addEventListener('click', function() { openWebTemplates(); });
+        });
+        el.parentNode.replaceChild(fresh, el);
+        el = document.getElementById('wtscSlider');
+
+        var startX = 0, moved = 0;
+
+        function onStart(x) { startX = x; moved = 0; wtscDragging = true; }
+        function onMove(x)  { moved = x - startX; }
+        function onEnd() {
+          wtscDragging = false;
+          if (Math.abs(moved) > 40) {
+            wtscGoTo(moved < 0 ? wtscIdx + 1 : wtscIdx - 1);
+          }
+          wtscAutoStart();
+        }
+
+        el.addEventListener('mousedown',  function(e){ onStart(e.clientX); });
+        el.addEventListener('mousemove',  function(e){ if(wtscDragging) onMove(e.clientX); });
+        el.addEventListener('mouseup',    onEnd);
+        el.addEventListener('mouseleave', function(){ if(wtscDragging) onEnd(); });
+        el.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive:true });
+        el.addEventListener('touchmove',  function(e){ onMove(e.touches[0].clientX); },  { passive:true });
+        el.addEventListener('touchend',   onEnd);
+      }
+
+      /* Expose for re-render after wtLoadTemplates completes */
+      window.wtscRefresh = function() {
+        wtscRender();
+      };
+
+      /* Init after DOM ready — slight delay to let wtTemplates potentially pre-load */
+      setTimeout(wtscInit, 300);
+    })();
+
      END SHOWCASE CARD JAVASCRIPT
      ═══════════════════════════════════════════════════════════ */
 
@@ -7540,6 +7849,8 @@ async function openComments(){
       wtTemplates = [];
     }
     wtRender();
+    /* Refresh homepage showcase with freshly loaded data */
+    if (typeof wtscRefresh === 'function') wtscRefresh();
   }
 
   /* ── Filter panel open / close / apply ── */
