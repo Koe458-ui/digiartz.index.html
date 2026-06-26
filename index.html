@@ -9491,10 +9491,12 @@ async function openComments(){
       adsInit = true;
       setTimeout(function(){
         var slots = panel.querySelectorAll('ins.adsbygoogle');
-        slots.forEach(function(ins){
-          try{ (adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
+        slots.forEach(function(ins, i){
+          setTimeout(function(){
+            try{ (adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
+          }, i * 150);
         });
-      }, 350); /* wait for slide-in transition */
+      }, 800); /* staggered push — avoids main-thread freeze */
     }
   };
 
