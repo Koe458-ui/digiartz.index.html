@@ -8080,6 +8080,7 @@ body.admin .wtCardAdm { display: flex; }
     var catR = document.querySelector('input[name="fltCat"][value="all"]');
     if(catR) catR.checked = true;
     openFG();
+    if(typeof zeoSectionTrigger==='function') zeoSectionTrigger();
   }
   function ddOpenGalleryChar(){
     closeMenu();
@@ -8720,6 +8721,7 @@ async function openComments(){
     el.classList.add('open');
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    if(typeof zeoSectionTrigger==='function') zeoSectionTrigger();
   }
 
   function closeSubscription() {
@@ -8737,6 +8739,7 @@ async function openComments(){
     el.classList.add('open');
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    if(typeof zeoSectionTrigger==='function') zeoSectionTrigger();
   }
   function closeComicArts() {
     var el = document.getElementById('comicArtsPage');
@@ -8779,6 +8782,7 @@ async function openComments(){
     wtLoadTemplates();
     /* Sync admin button visibility */
     wtSyncAdmBtn();
+    if(typeof zeoSectionTrigger==='function') zeoSectionTrigger();
   }
   function closeWebTemplates() {
     var el = document.getElementById('webTemplatesPage');
@@ -9482,8 +9486,7 @@ async function openComments(){
     }
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
-
-    /* Push AdSense slots exactly once, after the panel is visible */
+    if(typeof zeoSectionTrigger==='function') zeoSectionTrigger();
     if(!adsInit){
       adsInit = true;
       setTimeout(function(){
@@ -10477,9 +10480,12 @@ window.ZEO_DATA = {
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup',   onPointerUp);
     if (drag.wasDrag) {
-      /* Save drag position, then schedule the return-home sequence */
+      /* Save drag position; only start return if chat is closed */
       savePos(parseInt(btn.style.right, 10), parseInt(btn.style.bottom, 10));
-      scheduleReturn(); /* bubbles stay paused; resumeBubble() called inside scheduleReturn when done */
+      if (!isOpen) {
+        scheduleReturn(); /* bubbles stay paused; resumeBubble() called inside scheduleReturn when done */
+      }
+      /* If chat is open, return will be scheduled when the user closes it (see closeChat) */
     } else {
       /* Was a click, not a drag — toggle chat (bubble pause handled by openChat/closeChat) */
       resumeBubble();
@@ -10631,6 +10637,16 @@ window.ZEO_DATA = {
   /* Start the cycle after a short delay */
   setTimeout(showBubble, 1800);
 
+  /* ── Section trigger — call this whenever a major section opens ── */
+  var sectionTriggerTimer = null;
+  window.zeoSectionTrigger = function() {
+    if (isOpen || bubblePaused) return;
+    clearTimeout(sectionTriggerTimer);
+    sectionTriggerTimer = setTimeout(function() {
+      if (!isOpen && !bubblePaused) showBubble();
+    }, 2000);
+  };
+
   /* ════════════════════════════════════════════════════════
      CHAT PANEL OPEN / CLOSE
   ════════════════════════════════════════════════════════ */
@@ -10653,7 +10669,14 @@ window.ZEO_DATA = {
     btn.setAttribute('aria-expanded', 'false');
     setTimeout(function() {
       panel.classList.remove('zeoHiding');
-      resumeBubble();
+      /* If bot was dragged away from home while chat was open, return it now */
+      var curRight  = parseInt(btn.style.right,  10);
+      var curBottom = parseInt(btn.style.bottom, 10);
+      if (curRight !== HOME_RIGHT || curBottom !== HOME_BOTTOM) {
+        scheduleReturn(); /* resumes bubbles after glide */
+      } else {
+        resumeBubble();
+      }
     }, 280);
   }
 
