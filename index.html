@@ -46,7 +46,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&amp;family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
   </script>
-  <!-- Hero artwork images are set via JS (applyBg / Supabase settings) — no static preload needed -->
+  <!-- Hero background/artwork feature fully removed -->
   <style>
 
 
@@ -72,20 +72,22 @@
     html{scroll-behavior:smooth;}
     body{background:var(--bg);color:var(--tx);font-family:var(--fb);overflow-x:hidden;min-height:100vh;}
 
-    /* INTRO */
-    #intro{position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:1;transition:opacity 1s ease;pointer-events:auto;}
+    /* INTRO — dark/violet theme, matching the Community page
+       (--cmBg #08080d, --cmAccent #8b5cf6, --cmAccentSoft #b9a3fb) */
+    #intro{position:fixed;inset:0;z-index:9999;background:#08080d;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:1;transition:opacity 1s ease;pointer-events:auto;}
     #intro.iHide{opacity:0;pointer-events:none;}
     #intro.iGone{visibility:hidden;}
-    .iLogo{font-family:var(--fd);font-size:clamp(2.2rem,9vw,6rem);font-weight:900;background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 80%,#c026d3),var(--tc),color-mix(in srgb,var(--tc) 45%,white));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:1;}
-    .iTag{font-family:var(--fm);font-size:clamp(.65rem,2vw,.8rem);letter-spacing:.35em;color:color-mix(in srgb,var(--tc) 70%,#333);margin-top:1rem;opacity:1;}
+    .iLogo{font-family:var(--fd);font-size:clamp(2.2rem,9vw,6rem);font-weight:900;background:linear-gradient(135deg,#f5f4fb,#b9a3fb,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:1;}
+    .iTag{font-family:var(--fm);font-size:clamp(.65rem,2vw,.8rem);letter-spacing:.35em;color:rgba(214,212,232,.62);margin-top:1rem;opacity:1;}
     .iPts{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-    .iPts span{position:absolute;width:2px;height:2px;background:var(--tc);border-radius:50%;box-shadow:0 0 6px var(--tc);animation:pD linear forwards;}
+    .iPts span{position:absolute;width:2px;height:2px;background:#8b5cf6;border-radius:50%;box-shadow:0 0 6px #8b5cf6;animation:pD linear forwards;}
     @keyframes pD{0%{opacity:0;transform:translateY(0) scale(0)}20%{opacity:1;transform:translateY(-20px) scale(1)}100%{opacity:0;transform:translateY(-120px) scale(.3)}}
     /* Loading bar */
     .iLoadWrap{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:min(280px,70vw);display:flex;flex-direction:column;align-items:center;gap:.6rem;}
-    .iLoadTrack{width:100%;height:2px;background:rgba(0,0,0,.12);border-radius:2px;overflow:hidden;}
-    .iLoadBar{height:100%;width:0%;background:linear-gradient(90deg,var(--tc),color-mix(in srgb,var(--tc) 60%,white));border-radius:2px;transition:width .25s ease-out;box-shadow:0 0 8px var(--tc);}
-    .iLoadPct{font-family:var(--fm);font-size:.72rem;letter-spacing:.2em;color:color-mix(in srgb,var(--tc) 70%,#333);opacity:.8;}
+    .iLoadTrack{width:100%;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;}
+    .iLoadBar{height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#b9a3fb);border-radius:2px;transition:width .25s ease-out;box-shadow:0 0 8px #8b5cf6;}
+    .iLoadPct{font-family:var(--fm);font-size:.72rem;letter-spacing:.2em;color:rgba(214,212,232,.7);opacity:.8;}
+
 
     /* =========================================================
        FLOATING BOTTOM NAVIGATION
@@ -170,156 +172,8 @@
 
     #hero {
       position: relative;
-      min-height: 100vh;
-      display: flex;
-      align-items: stretch;
+      min-height: 1px;
       overflow: hidden;
-      background: #000;
-    }
-
-    /* ── Left content panel — floats over full-bleed image ── */
-    .hLeft {
-      flex: 0 0 42%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 7rem 4rem 7rem 5rem;
-      position: relative;
-      z-index: 2;
-      background: transparent;
-    }
-
-    /* Removed: vertical rule divider (no longer relevant on full-bleed layout) */
-    .hLeft::after {
-      display: none;
-    }
-
-    /* ── Brand eyebrow ── */
-    .hBrand {
-      font-family: var(--fm);
-      font-size: .68rem;
-      letter-spacing: .45em;
-      color: rgba(255,255,255,.75);
-      text-transform: uppercase;
-      margin-bottom: 1.6rem;
-      display: flex;
-      align-items: center;
-      gap: .7rem;
-    }
-    .hBrand::before {
-      content: '';
-      display: block;
-      width: 28px;
-      height: 1px;
-      background: rgba(255,255,255,.55);
-      flex-shrink: 0;
-    }
-
-    /* ── Headline ── */
-    #hero .hT {
-      font-family: var(--fd);
-      font-size: clamp(2.2rem, 3.8vw, 4rem);
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: -.025em;
-      color: #ffffff;
-      -webkit-text-fill-color: #ffffff;
-      filter: none;
-      margin-bottom: 2.2rem;
-      position: static;
-      text-shadow: 0 2px 20px rgba(0,0,0,.45);
-    }
-    #hero .hT .si { display: none; }
-
-    /* ── CTA button ── */
-    .hCta {
-      display: inline-flex;
-      align-items: center;
-      gap: .65rem;
-      padding: .9rem 2.4rem;
-      background: rgba(255,255,255,.15);
-      color: #ffffff;
-      border: 1.5px solid rgba(255,255,255,.6);
-      font-family: var(--fm);
-      font-size: .75rem;
-      letter-spacing: .22em;
-      cursor: pointer;
-      text-decoration: none;
-      border-radius: 4px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      transition: background .28s, border-color .28s, transform .28s, box-shadow .28s;
-      align-self: flex-start;
-    }
-    .hCta:hover {
-      background: rgba(255,255,255,.28);
-      color: #ffffff;
-      border-color: rgba(255,255,255,.9);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(0,0,0,.25);
-    }
-    .hCta .hCtaArrow {
-      display: inline-block;
-      transition: transform .28s;
-    }
-    .hCta:hover .hCtaArrow { transform: translateX(3px); }
-
-    /* ── Right artwork panel — full-bleed behind everything ── */
-    .hRight {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      z-index: 0;
-    }
-
-    /* Desktop artwork image */
-    .hArtImg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center center;
-      display: block;
-    }
-
-    /* Mobile artwork image — hidden on desktop */
-    .hArtImgMob { display: none; }
-
-    /* hRight::before removed — no overlay on full-bleed image */
-    .hRight::before { display: none; }
-
-    /* ── Scroll indicator ── */
-    .hScr {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 2.8rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .4rem;
-      z-index: 4;
-    }
-    .hScr span {
-      font-family: var(--fm);
-      font-size: .58rem;
-      letter-spacing: .35em;
-      color: rgba(255,255,255,.6);
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-    }
-    .sLn {
-      width: 1px;
-      height: 44px;
-      background: linear-gradient(to bottom, rgba(255,255,255,.6), transparent);
-      animation: sD 2s ease-in-out infinite;
-    }
-    @keyframes sD {
-      0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
-      50%  { transform: scaleY(1); transform-origin: top; }
-      51%  { transform-origin: bottom; }
-      100% { transform: scaleY(0); transform-origin: bottom; opacity: .3; }
     }
 
     /* ── Front-page floating widgets — brand badge + notification
@@ -368,6 +222,8 @@
       letter-spacing: .01em;
       pointer-events: none;
     }
+    .hBadge .hBadgeD { color: #0a0a0a; }
+    .hBadge .hBadgeA { color: #dc2626; }
 
     /* ── Notification button — top-right, plain circle ── */
     .hNotifBtn {
@@ -393,134 +249,51 @@
     }
     .hNotifBtn.hasUnread .hNotifDot { display: block; }
 
-    /* ── Admin edit background button ── */
-    .hEBg {
-      position: absolute;
-      bottom: 1rem;
-      right: 1.5rem;
-      z-index: 10;
-      padding: .5rem 1rem;
-      background: rgba(255,255,255,.88);
-      border: 1px solid var(--bdr);
-      color: var(--ps);
-      font-family: var(--fm);
-      font-size: .72rem;
-      letter-spacing: .15em;
-      cursor: pointer;
-      display: none;
-      align-items: center;
-      gap: .4rem;
-      transition: background .25s, border-color .25s;
-      border-radius: 6px;
-    }
-    .hEBg:hover { background: rgba(255,255,255,1); border-color: var(--pg); }
-    body.admin .hEBg { display: flex; }
-    #bgF { display: none; }
-
-    /* Unused legacy rules kept for JS compatibility */
+    /* Unused legacy rule kept for JS compatibility */
     #hBgImg { display: none; }
-    .hOv    { display: none; }
-    .hCon   { display: none; }
-    .hSub   { display: none; }
-    .hDesc  { display: none; }
 
-
-    /* hT must never clip its children */
-    #hero .hT { overflow: visible; }
-
-    /* Each line span sits on its own line, no overflow clip */
-    .hTL1,
-    .hTL2 {
-      display: block;
-      overflow: visible;
+    /* =========================================================
+       TOP ARTWORK SLIDE — horizontal showcase strip that sits
+       directly below the floating top bar (brand badge /
+       notifications / Zeo), themed to match the dark Artworks
+       section right below it. Boxes are a fixed rectangular
+       "desktop card" size on every device — never resized down —
+       so mobile/tablet always scrolls sideways one box at a time,
+       and desktop shows 4 in a row with the strip still scrollable
+       once more boxes get added. Empty shells for now — content
+       gets wired in later.
+       ========================================================= */
+    #topSlide{
+      position:relative;
+      background:var(--bg);
+      padding:calc(clamp(1rem,2.6vw,2rem) + clamp(42px,8vw,54px) + 1.6rem) 0 .6rem;
+    }
+    .tsTrack{
+      display:flex;
+      gap:.7rem;
+      max-width:1300px;
+      margin:0 auto;
+      padding:0 2rem;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .tsTrack::-webkit-scrollbar{display:none;}
+    .tsBox{
+      flex:0 0 auto;
+      width:300px;
+      height:190px;
+      border-radius:14px;
+      background:var(--sur2);
+      border:1px solid var(--bdr);
+      scroll-snap-align:start;
+    }
+    @media(max-width:1024px){
+      .tsBox{ scroll-snap-align:center; }
     }
 
-    /* Base transition — opacity only so nothing outside moves */
-    .hBrand,
-    .hTL1,
-    .hTL2 {
-      transition: opacity 480ms cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: opacity;
-    }
-    /* CTA already has transform transition for hover — add opacity only */
-    .hCta {
-      transition:
-        background  .28s,
-        border-color .28s,
-        transform   .28s,
-        box-shadow  .28s,
-        opacity     480ms cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: opacity;
-    }
-
-    /* Faded state — each toggled independently by JS */
-    .hBrand.hFaded,
-    .hTL1.hFaded,
-    .hTL2.hFaded,
-    .hCta.hFaded {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* Reduced-motion: instant switch */
-    @media (prefers-reduced-motion: reduce) {
-      .hBrand, .hTL1, .hTL2, .hCta {
-        transition: opacity 100ms linear, background .28s, border-color .28s,
-                    transform .28s, box-shadow .28s;
-      }
-    }
-
-
-    /* ── Tablet & desktop: show desktop art, hide mobile art ── */
-    @media (min-width: 769px) {
-      .hArtImg    { display: block; }
-      .hArtImgMob { display: none; }
-    }
-
-    /* ── Mobile: stacked vertical layout ── */
-    @media (max-width: 768px) {
-      #hero {
-        flex-direction: column;
-        min-height: 100svh;
-      }
-      .hRight {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        order: 0;
-      }
-      .hRight::before { display: none; }
-      .hArtImg    { display: none; }
-      .hArtImgMob {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center center;
-      }
-      /* Content overlays the bottom of the portrait image */
-      .hLeft {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        order: 1;
-        z-index: 3;
-        flex: unset;
-        background: transparent;
-        padding: 2.8rem 1.8rem 3rem;
-        justify-content: flex-end;
-      }
-      .hLeft::after { display: none; }
-      #hero .hT { font-size: clamp(1.9rem, 8vw, 2.8rem); }
-      .hCta { align-self: flex-start; }
-      .hScr { display: none; }
-    }
-
-    @media (max-width: 480px) {
-      .hLeft { padding: 2.2rem 1.4rem 2.8rem; }
-    }
     /* Visually hidden — accessible to screen readers, invisible on screen */
     .srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
@@ -551,7 +324,7 @@
     .gItem img[data-src]{background:linear-gradient(90deg,var(--sur) 25%,var(--sur2) 50%,var(--sur) 75%);background-size:200% 100%;animation:imgShimmer 1.4s infinite;min-height:120px;}
     @keyframes imgShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     .gItem:hover img{transform:scale(1.04);}
-    .gNm{position:absolute;left:0;right:0;bottom:0;padding:1.5rem .65rem .6rem;background:linear-gradient(to top, rgba(5,3,8,.88) 0%, rgba(5,3,8,.48) 55%, transparent 100%);font-family:var(--fm);font-size:.72rem;letter-spacing:.08em;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:none;pointer-events:none;}
+    .gNm{display:none;}
     .gOv{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(5,3,8,.7);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;}
     .gItem:hover .gOv{opacity:1;}
     .gOv svg{width:36px;height:36px;color:var(--ps);}
@@ -562,14 +335,60 @@
     .gEdit{position:absolute;top:.4rem;right:2.05rem;width:24px;height:24px;background:color-mix(in srgb,var(--tc) 80%,#1a1c22);border:none;color:white;font-size:.72rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:5;transition:background .2s;border-radius:6px;}
     .gEdit:hover{background:var(--tc);}
     body.admin .gEdit{display:flex;}
-    .cBadgeWrap{position:absolute;top:.4rem;left:.4rem;z-index:3;display:flex;gap:.3rem;pointer-events:none;}
+    .cBadgeWrap{display:none;}
     .cBadge{background:#ffffff;border:1px solid var(--bdr);font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:#1a1c22;padding:.2rem .4rem;text-transform:uppercase;pointer-events:none;border-radius:6px;box-shadow:0 2px 8px rgba(5,3,8,.35);}
     .cBadgeMore{background:color-mix(in srgb,var(--tc) 85%,#1a1c22);border:1px solid var(--bdrh);font-family:var(--fm);font-size:.6rem;letter-spacing:.05em;color:#ffffff;padding:.2rem .4rem;border-radius:6px;box-shadow:0 2px 8px rgba(5,3,8,.35);pointer-events:auto;cursor:default;}
 
 
-    /* ── Full gallery overlay — slide-in panel ── */
-    #fg{position:fixed;inset:0;z-index:500;background:var(--bg);overflow-y:auto;transform:translateX(100%);transition:transform .45s cubic-bezier(.22,1,.36,1);}
+    /* ── Full gallery overlay — slide-in panel ──
+       Locally re-declares the shared design tokens (same values as
+       #communityPage) so every child that already styles itself with
+       var(--bg)/var(--sur)/var(--tx)/var(--pg)/etc. repaints to match
+       the Community page automatically. Artwork cards (.gItem) and
+       the image grid itself are intentionally left alone below. */
+    #fg{
+      position:fixed;inset:0;z-index:500;overflow-y:auto;
+      transform:translateX(100%);
+      transition:transform .45s cubic-bezier(.22,1,.36,1);
+      --bg:#08080d;--sur:#131320;--sur2:#191927;
+      --bdr:#26263a;--bdrh:#3a3a56;
+      --tx:#f5f4fb;--txd:rgba(214,212,232,.62);
+      --pg:#8b5cf6;--pb:#b9a3fb;--ps:#c9b8fd;
+      --pdim:rgba(139,92,246,.16);
+      background:var(--bg);color:var(--tx);
+    }
     #fg.open{transform:translateX(0);}
+    /* ── Title + subtitle — sits above the sticky search/filter bar,
+       scrolls away with the rest of the page ── */
+    .fgIntro{
+      max-width:640px;
+      margin:0 auto;
+      padding:2.4rem 1.5rem .4rem;
+      text-align:center;
+    }
+    .fgTitle{
+      font-family:var(--fd);
+      font-size:clamp(1.8rem,5vw,2.5rem);
+      font-weight:900;
+      letter-spacing:-.01em;
+      line-height:1.1;
+      background:linear-gradient(100deg,var(--tx) 0%,var(--tx) 40%,var(--pb) 72%,var(--pg) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .fgTitleRule{
+      display:flex;align-items:center;justify-content:center;gap:.6rem;
+      margin:.6rem auto 0;
+    }
+    .fgTitleRule span{width:30px;height:1px;background:linear-gradient(90deg,transparent,var(--pg));}
+    .fgTitleRule span:last-child{background:linear-gradient(90deg,var(--pg),transparent);}
+    .fgTitleRule i{font-style:normal;font-size:.65rem;color:var(--pg);}
+    .fgSubtitle{
+      font-family:var(--fb);
+      font-size:.85rem;
+      color:var(--txd);
+      line-height:1.6;
+      margin-top:.7rem;
+    }
     .fgHdr{position:sticky;top:0;z-index:10;background:rgba(5,3,8,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:1rem 1.5rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
     .fgQ{flex:1;min-width:140px;max-width:280px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx);font-family:var(--fm);font-size:.78rem;letter-spacing:.1em;padding:.55rem .9rem;outline:none;transition:border-color .25s;border-radius:6px;}
     .fgQ:focus{border-color:var(--pg);}
@@ -586,8 +405,15 @@
     #fgFltOvr{position:fixed;inset:0;z-index:1050;background:rgba(5,3,8,.55);opacity:0;pointer-events:none;transition:opacity .3s ease;backdrop-filter:blur(3px);}
     #fgFltOvr.open{opacity:1;pointer-events:auto;}
 
-    /* ── FILTER PANEL ── */
+    /* ── FILTER PANEL ── — sits outside #fg in the DOM (sibling, not
+       child), so it needs the same token re-declaration as #fg above
+       to match the Community page theme. */
     #fgFltPanel{
+      --bg:#08080d;--sur:#131320;--sur2:#191927;
+      --bdr:#26263a;--bdrh:#3a3a56;
+      --tx:#f5f4fb;--txd:rgba(214,212,232,.62);
+      --pg:#8b5cf6;--pb:#b9a3fb;--ps:#c9b8fd;
+      --pdim:rgba(139,92,246,.16);
       position:fixed;bottom:0;left:0;right:0;z-index:1051;
       background:linear-gradient(160deg,var(--sur) 0%,var(--sur2) 100%);
       border-top:1px solid var(--bdrh);
@@ -975,24 +801,6 @@
       .amCard{transform:none!important;}
     }
 
-    /* ABOUT — layout now uses shared .shWrap/.shCard/.shInfo formula */
-    /* Closing quote — italic accent below the bio paragraphs */
-    .aQuote{
-      margin-top:1.2rem;
-      padding-top:1.2rem;
-      border-top:1px solid var(--bdr);
-      font-family:var(--fd);
-      font-size:clamp(.88rem,2vw,1.05rem);
-      font-weight:700;
-      letter-spacing:.04em;
-      color:var(--pg);
-      font-style:italic;
-    }
-    .aEA{display:none;width:100%;min-height:120px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx);font-family:var(--fb);font-size:1.1rem;line-height:1.7;padding:1rem;outline:none;resize:vertical;margin-top:1rem;border-radius:6px;}
-    .aEA:focus{border-color:var(--pg);}
-    body.admin #about .shTxt{display:none;}
-    body.admin #about .aQuote{display:none;}
-    body.admin .aEA{display:block;}
 
     #communityPage{
   position:fixed;inset:0;z-index:500;
@@ -1228,6 +1036,40 @@
     }
 
     /* =========================================================
+       FRONT PAGE — DARK / VIOLET THEME (matches Community page)
+       Scoped to the sections that make up the front page below
+       the hero (#hero is already dark/full-bleed on its own):
+       #artworks, #subOverview, #connect, footer.siteFooter.
+       Re-declaring the shared design tokens locally on each of
+       these section roots means every element inside that already
+       styles itself with var(--bg)/var(--sur)/var(--tx)/etc.
+       repaints automatically — the rest of the site (gallery,
+       profile pages, login, modals) keeps the original light
+       tokens untouched.
+       ========================================================= */
+    #topSlide, #artworks, #subOverview, #connect, footer.siteFooter{
+      --bg:#08080d;
+      --sur:#131320;
+      --sur2:#191927;
+      --bdr:#26263a;
+      --bdrh:#3a3a56;
+      --tx:#f5f4fb;
+      --txd:rgba(214,212,232,.62);
+      --pg:#8b5cf6;
+      --pb:#b9a3fb;
+      --ps:#c9b8fd;
+      --pdim:rgba(139,92,246,.16);
+      background:var(--bg);
+      color:var(--tx);
+    }
+
+    /* ── subOverview tier-badge pastel fills → dark-safe tints ── */
+    #subOverview .subOvPlanBadge--lite    { color:#93c5fd; border-color:#3b5c8a; background:rgba(59,130,246,.14); }
+    #subOverview .subOvPlanBadge--premium { color:#c4b5fd; border-color:#5b4a8a; background:rgba(139,92,246,.16); }
+    #subOverview .subOvPlanBadge--max     { color:#fcd34d; border-color:#8a6a2a; background:rgba(234,179,8,.14); }
+    #subOverview .subOvPlanBadge--dev     { color:#fca5a5; border-color:#8a3a3a; background:rgba(220,38,38,.14); }
+
+    /* =========================================================
        COMMUNITY PAGE — DARK / VIOLET THEME
        Scoped entirely to #communityPage via local CSS variables
        so the rest of the (light) site is untouched. Selectors are
@@ -1423,11 +1265,20 @@
 
 
 
-    /* ── Outer shell ── */
+    /* ── Outer shell — darker than the rest of the dark/violet
+       theme, since a footer should read as the "floor" of the
+       page. Locally overrides the shared --bg/--sur tokens (set
+       by the theme-scoping block above) to a deeper near-black,
+       so every child element that already styles itself with
+       var(--bg)/var(--sur)/var(--tx)/etc. repaints automatically. ── */
     footer.siteFooter {
-      /* Pastel pink: soft, elegant, not saturated */
-      background: #fdf0f3;
-      border-top: 1px solid #f0d8de;
+      --bg: #040406;
+      --sur: #0b0b13;
+      --sur2: #101018;
+      --bdr: #1c1c2c;
+      --bdrh: #2c2c44;
+      background: var(--bg);
+      border-top: 1px solid var(--bdr);
       padding: 0;
       text-align: left;
       display: block;
@@ -1460,27 +1311,27 @@
       line-height: 1;
     }
     .ftBrandName .ftBrandAccent {
-      color: #c9768e; /* muted rose — reads on pink bg */
+      color: var(--pg);
     }
     .ftBrandTagline {
       font-family: var(--fm);
       font-size: .64rem;
       letter-spacing: .28em;
-      color: #a0737e; /* warmer muted tone, stays within palette */
+      color: var(--txd);
       text-transform: uppercase;
       line-height: 1.4;
     }
     .ftBrandDivider {
       width: 28px;
       height: 1px;
-      background: #e0b8c2;
+      background: var(--bdr);
       margin: .25rem 0;
     }
     .ftBrandDesc {
       font-family: var(--fb);
       font-size: .82rem;
       line-height: 1.7;
-      color: #8a5e68;
+      color: var(--txd);
       max-width: 230px;
     }
 
@@ -1506,9 +1357,9 @@
       font-weight: 700;
       letter-spacing: .32em;
       text-transform: uppercase;
-      color: #b07080; /* rose-toned label, readable on pink */
+      color: var(--ps);
       padding-bottom: .5rem;
-      border-bottom: 1px solid #f0d8de;
+      border-bottom: 1px solid var(--bdr);
       white-space: nowrap;
     }
     .ftColList {
@@ -1520,14 +1371,16 @@
       gap: .1rem;
     }
 
-    /* ── Link / button base ── */
+    /* ── Link / button base — every clickable link in the footer
+       follows the same dark/violet theme tokens as the rest of
+       the page. ── */
     .ftColLink {
       display: inline-flex;
       align-items: center;
       gap: .45rem;
       font-family: var(--fb);
       font-size: .83rem;
-      color: #7a5260;
+      color: var(--txd);
       background: none;
       border: none;
       cursor: pointer;
@@ -1545,19 +1398,19 @@
       left: 0;
       right: 0;
       height: 1px;
-      background: #c9768e;
+      background: var(--pg);
       transform: scaleX(0);
       transform-origin: left center;
       transition: transform .28s cubic-bezier(.22,1,.36,1);
     }
     .ftColLink:hover {
-      color: #9e3f58;
+      color: var(--tx);
     }
     .ftColLink:hover::after {
       transform: scaleX(1);
     }
     .ftColLink:focus-visible {
-      outline: 2px solid #c9768e;
+      outline: 2px solid var(--pg);
       outline-offset: 2px;
       border-radius: 3px;
     }
@@ -1566,7 +1419,7 @@
       content: '→';
       font-family: var(--fb);
       font-size: .7rem;
-      color: #c9768e;
+      color: var(--pg);
       opacity: 0;
       transform: translateX(-4px);
       transition: opacity .22s ease, transform .22s ease;
@@ -1579,8 +1432,12 @@
 
     /* ── Bottom copyright band ── */
     .ftBase {
-      border-top: 1px solid #f0d8de;
+      border-top: 1px solid var(--bdr);
       padding: 2rem 3rem;
+      /* Extra bottom clearance so the fixed floating bottom nav
+         bar never covers the copyright/legal line — the page
+         scrolls a little further than the footer's own content. */
+      padding-bottom: calc(2rem + 5.5rem);
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
@@ -1593,25 +1450,25 @@
       font-size: .75rem;
       font-weight: 700;
       letter-spacing: .22em;
-      color: #b07080;
+      color: var(--ps);
       white-space: nowrap;
       flex-shrink: 0;
     }
     .ftBaseLogo .s {
-      color: #c9768e;
+      color: var(--pg);
     }
     .ftBaseCopy {
       font-family: var(--fm);
       font-size: .62rem;
       letter-spacing: .12em;
-      color: #a0737e;
+      color: var(--txd);
       text-align: center;
     }
     .ftBaseLegal {
       font-family: var(--fb);
       font-size: .73rem;
       line-height: 1.65;
-      color: #9a6a75;
+      color: var(--txd);
       text-align: right;
       max-width: 480px;
     }
@@ -1620,7 +1477,7 @@
     @media (max-width: 1024px) {
       .ftMain { padding: 3.5rem 2.5rem 3rem; gap: 3.5rem; }
       .ftCols { gap: 2.5rem; }
-      .ftBase { padding: 1.8rem 2.5rem; gap: 1rem 2rem; }
+      .ftBase { padding: 1.8rem 2.5rem; padding-bottom: calc(1.8rem + 5.5rem); gap: 1rem 2rem; }
     }
     @media (max-width: 860px) {
       .ftMain {
@@ -1639,6 +1496,7 @@
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto auto;
         padding: 1.6rem 2rem;
+        padding-bottom: calc(1.6rem + 5.5rem);
         gap: .9rem 2rem;
       }
       .ftBaseCopy { text-align: left; grid-column: 1; grid-row: 1; }
@@ -1666,6 +1524,7 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
         padding: 1.4rem;
+        padding-bottom: calc(1.4rem + 5rem);
         gap: .75rem;
         text-align: center;
       }
@@ -2099,7 +1958,7 @@
     }
 
     #artworks{
-      padding:5rem 0 4rem;
+      padding:1.8rem 0 4rem;
     }
     .awHdr{
       max-width:1300px;
@@ -2238,17 +2097,10 @@
       min-height:140px;
     }
     /* ── Title + category overlaid directly on the artwork with a
-       bottom gradient scrim — ArtStation-style, no caption bar ── */
-    .awMeta{
-      position:absolute;
-      left:0;right:0;bottom:0;
-      padding:1.7rem .85rem .75rem;
-      display:flex;
-      flex-direction:column;
-      gap:.25rem;
-      background:linear-gradient(to top, rgba(5,3,8,.88) 0%, rgba(5,3,8,.48) 55%, transparent 100%);
-      pointer-events:none;
-    }
+       bottom gradient scrim — ArtStation-style, no caption bar ──
+       Hidden: cards now show image only, name/category revealed in
+       the lightbox once clicked ── */
+    .awMeta{display:none;}
     .awName{
       font-family:var(--fm);
       font-size:.78rem;
@@ -2425,6 +2277,18 @@
       gap:1.2rem;margin-top:1.2rem;
     }
     @media(max-width:480px){.pfGrid{grid-template-columns:1fr;}}
+    /* ── Gallery tab reuses the same fixed column-count breakpoints
+       as the main Artworks grid (.awGrid) — 2/3/4/5 columns — so
+       artwork thumbnails look identical everywhere. Comic tab keeps
+       the auto-fill .pfGrid layout above (still developing). ── */
+    .pfGridArt{
+      grid-template-columns:repeat(2,1fr);
+      gap:1rem;
+    }
+    @media(min-width:640px){ .pfGridArt{grid-template-columns:repeat(3,1fr);gap:1.2rem;} }
+    @media(min-width:1025px){ .pfGridArt{grid-template-columns:repeat(4,1fr);gap:1.4rem;} }
+    @media(min-width:1440px){ .pfGridArt{grid-template-columns:repeat(5,1fr);} }
+    @media(max-width:480px){ .pfGridArt{grid-template-columns:repeat(2,1fr);gap:.7rem;} }
     @media(max-width:480px){
       .pfAvatarWrap{left:1.2rem;}
       .pfAvatar{width:72px;height:72px;font-size:1.7rem;}
@@ -2434,9 +2298,10 @@
       .pfUpTrigger{padding:.5rem .8rem;font-size:.62rem;}
     }
     .pfCardMeta{padding:.65rem .75rem .8rem;border-top:1px solid var(--bdr);}
-    .pfCardTitle{font-family:var(--fm);font-size:.74rem;font-weight:700;letter-spacing:.05em;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .pfCardDate{font-family:var(--fm);font-size:.62rem;letter-spacing:.08em;color:var(--txd);margin-top:.2rem;}
-    .pfCardTags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem;}
+    .pfCardMeta:not(:has(.pfCardAdmin)){display:none;}
+    .pfCardTitle{display:none;}
+    .pfCardDate{display:none;}
+    .pfCardTags{display:none;}
     .pfTagChip{font-family:var(--fm);font-size:.6rem;letter-spacing:.06em;padding:.1rem .4rem;background:color-mix(in srgb,var(--tc) 10%,transparent);color:var(--ps);border-radius:3px;}
     .pfCardAdmin{display:flex;gap:.5rem;margin-top:.55rem;}
     .pfCardAdmin button{flex:1;font-family:var(--fm);font-size:.6rem;letter-spacing:.08em;padding:.35rem;border:1px solid var(--bdr);background:var(--sur2);color:var(--txd);cursor:pointer;border-radius:4px;}
@@ -2551,45 +2416,7 @@
         padding:0 1.2rem;
       }
     }
-    /* About section still uses shInfo/shTxt/shCard for its text block */
-    .shWrap{max-width:1200px;margin:2.5rem auto 0;padding:0 2rem;}
-    .shCard{
-      background:color-mix(in srgb,var(--sur) 88%,transparent);
-      border:1px solid var(--bdr);
-      border-radius:4px;
-      box-shadow:
-        0 2px 6px  rgba(0,0,0,.14),
-        0 10px 28px rgba(0,0,0,.13),
-        0 28px 56px rgba(0,0,0,.10),
-        0 48px 80px rgba(0,0,0,.06);
-      padding:1.4rem;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:1.4rem;
-      align-items:start;
-    }
-    .shInfo{
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      padding:.6rem .4rem;
-    }
-    .shInfo .secT{font-size:clamp(1.7rem,3vw,2.3rem);margin-bottom:.7rem;}
-    .shInfo .secT .s{color:var(--pg);font-size:.5em;}
-    .shTxt{
-      font-family:var(--fb);
-      font-size:clamp(.95rem,2.2vw,1.05rem);
-      line-height:1.7;
-      color:var(--txd);
-      margin-bottom:.6rem;
-    }
-    .shTxt:last-of-type{margin-bottom:1.4rem;}
-    @media(max-width:640px){
-      .shWrap{padding:0 1.2rem;}
-      .shCard{padding:1rem;gap:.8rem;}
-      .shInfo{padding:.4rem 0 0;}
-    }
-  
+
 /* IMAGE LINKED COMMENTS PATCH */
 .cpSelectedImage{
 display:none;
@@ -2940,7 +2767,7 @@ body{background:var(--bg);}
   box-shadow:0 1px 3px rgba(20,20,30,.06),0 4px 14px rgba(20,20,30,.06)!important;
 }
 .gItem:hover{box-shadow:0 6px 20px rgba(20,20,30,.10)!important;}
-.hCta:hover,.fltDone:hover,.mBtn:hover,.admSv:hover,.sCard:hover,.cpBarSend:hover,.upBtn:hover,.fgFltBtn:hover,.fgFltBtn.active,.fltOptH:has(input:checked){box-shadow:none!important;}
+.fltDone:hover,.mBtn:hover,.admSv:hover,.sCard:hover,.cpBarSend:hover,.upBtn:hover,.fgFltBtn:hover,.fgFltBtn.active,.fltOptH:has(input:checked){box-shadow:none!important;}
 
 /* Overlay / scrim backgrounds used by non-hero panels — lightened so the
    white theme reads as light chrome instead of dark glass */
@@ -2951,16 +2778,25 @@ body{background:var(--bg);}
 #artModal{background:rgba(20,20,30,.4)!important;}
 .gOv{background:rgba(20,20,30,.55)!important;}
 .admBar{background:rgba(255,255,255,.97)!important;}
-.iLoadTrack{background:rgba(0,0,0,.08);}
 
 /* Cards / containers get a clean white surface with a soft border */
 .gItem,.modal,.legalModal,.adCard,.apCard,#fgFltPanel,.fltOptH{
   background:#ffffff;border-color:var(--bdr);
 }
 .awCard{background:#ffffff;border-color:var(--bdr);}
+#artworks .awCard{background:var(--sur);}
+
+/* Full Gallery chrome — re-applies the Community-matched dark tokens
+   on top of the white-theme defaults above. Only the search/filter
+   surfaces + header are touched here; .gItem (the artwork cards) is
+   deliberately left out of this list. */
+#fg .fgHdr{background:var(--bg)!important;border-bottom:1px solid var(--bdr);}
+#fgFltPanel{background:linear-gradient(160deg,var(--sur) 0%,var(--sur2) 100%)!important;border-color:var(--bdr)!important;}
+#fgFltPanel .fltOptH{background:color-mix(in srgb,var(--tc) 4%,transparent)!important;border-color:var(--bdr)!important;}
 
 /* Inputs / fields */
-.fgQ,.mIn,.aEA,.cpBarInput,.upCatWrap{background:#f6f7f9!important;color:var(--tx);border-color:var(--bdr)!important;}
+.fgQ,.mIn,.cpBarInput,.upCatWrap{background:#f6f7f9!important;color:var(--tx);border-color:var(--bdr)!important;}
+#fg .fgQ{background:var(--sur2)!important;color:var(--tx)!important;border-color:var(--bdr)!important;}
 
 /* Bottom nav — login/avatar chips match the dark/violet nav bar */
 .nLoginBtn,.nAvatarBtn{background:rgba(139,92,246,.14)!important;}
@@ -2977,8 +2813,8 @@ body{background:var(--bg);}
   --bdrh:color-mix(in srgb,var(--tc) 45%,transparent);
   --pdim:color-mix(in srgb,var(--tc) 12%,transparent);
 }
-/* #intro uses white background regardless of theme */
-#intro{background:#ffffff;}
+/* #intro now matches the Community dark/violet theme — see the
+   base #intro rule near the top of the stylesheet. */
 
 .nLoginBtn{
   background:rgba(139,92,246,.14);
@@ -4160,22 +3996,16 @@ body{background:var(--bg);}
   </nav>
 
   <!-- =========================================================
-       HERO SECTION — Premium Split-Screen Layout
-       ├─ Left Panel (.hLeft)
-       │   ├─ Brand Eyebrow (.hBrand)
-       │   ├─ Headline (.hT)
-       │   └─ CTA Button (.hCta)
-       ├─ Right Panel (.hRight)
-       │   ├─ Desktop Artwork (.hArtImg)
-       │   └─ Mobile Artwork (.hArtImgMob)
-       ├─ Scroll Indicator (.hScr)
-       └─ Admin Controls
+       HERO SECTION — stripped down to just the persistent
+       floating widgets (brand badge + notification button).
+       All hero background art, headline text, CTA, scroll
+       indicator, and admin background-change controls removed.
        ========================================================= -->
   <section id="hero">
 
     <!-- ── Brand badge — floating pill, present across the whole
          front page (not just hero), top-left ── -->
-    <div class="hBadge fpFloat" aria-hidden="true">DigiArtz</div>
+    <div class="hBadge fpFloat" aria-hidden="true"><span class="hBadgeD">Digi</span><span class="hBadgeA">Artz</span></div>
 
     <!-- ── Notification button — floating icon, present across the
          whole front page, top-right ── -->
@@ -4187,54 +4017,25 @@ body{background:var(--bg);}
       <span class="hNotifDot" aria-hidden="true"></span>
     </button>
 
-    <!-- ── Left: Content ── -->
-    <div class="hLeft">
-      <p class="hBrand">DigitArts</p>
-      <h1 class="hT"><span class="hTL1">Where Creativity Becomes</span><span class="hTL2">Timeless Art</span></h1>
-      <button class="hCta" onclick="openFG()">
-        Explore Gallery <span class="hCtaArrow">→</span>
-      </button>
-    </div>
-
-    <!-- ── Right: Artwork ── -->
-    <div class="hRight">
-      <!-- Desktop image (tablet, laptop, desktop, ultrawide) -->
-      <img
-        class="hArtImg"
-        src=""
-        alt="Featured digital artwork by DigitArts"
-        fetchpriority="high"
-        id="hDesktopImg"
-      />
-      <!-- Mobile image (phones ≤768px) -->
-      <img
-        class="hArtImgMob"
-        src=""
-        alt="Featured digital artwork by DigitArts"
-        id="hMobileImg"
-      />
-    </div>
-
-    <!-- ── Scroll indicator ── -->
-    <div class="hScr">
-      <span>SCROLL</span>
-      <div class="sLn"></div>
-    </div>
-
-    <!-- ── Admin: change desktop artwork ── -->
-    <button class="hEBg" style="right:1.5rem;" onclick="document.getElementById('bgF').click()">🖼 DESKTOP ART</button>
-    <input accept="image/*" id="bgF" onchange="handleBg(event)" type="file"/>
-    <label for="bgF" class="srOnly">Choose hero desktop artwork image</label>
-
-    <!-- ── Admin: change mobile artwork ── -->
-    <button class="hEBg" style="right:10rem;" onclick="document.getElementById('bgFMob').click()">📱 MOBILE ART</button>
-    <input accept="image/*" id="bgFMob" onchange="handleBgMobile(event)" type="file"/>
-    <label for="bgFMob" class="srOnly">Choose hero mobile artwork image</label>
-
     <!-- Legacy elements kept for JS compatibility -->
     <div id="hBgImg" style="display:none;"></div>
-    <div class="hOv" style="display:none;"></div>
-    <div class="hCon" style="display:none;"></div>
+  </section>
+
+  <!-- =========================================================
+       TOP ARTWORK SLIDE
+       Horizontal strip directly below the floating top bar (brand
+       badge / notifications / Zeo). Desktop: 4 boxes in a row.
+       Mobile/tablet: same box size, swipes left/right one at a
+       time via scroll-snap. Empty placeholders — no content wired
+       in yet.
+       ========================================================= -->
+  <section id="topSlide" aria-label="Featured artwork slideshow">
+    <div class="tsTrack" id="tsTrack">
+      <div class="tsBox"></div>
+      <div class="tsBox"></div>
+      <div class="tsBox"></div>
+      <div class="tsBox"></div>
+    </div>
   </section>
 
   <!-- ── Hidden Data Grid (source for Full Gallery overlay) ── -->
@@ -4371,42 +4172,6 @@ body{background:var(--bg);}
   </section>
 
   <!-- =========================================================
-       ABOUT SECTION
-       ├─ Section Header (.fsHdr)
-       │   ├─ Section Title (.secT)
-       │   └─ Section Subtitle (.secSub)
-       ├─ Showcase Card (.shWrap > .shCard)
-       │   ├─ Main Image Slot (.shMain #aboutMain)
-       │   ├─ Side Images (.shSide)
-       │   │   ├─ Side Slot 1 (#aboutSide1)
-       │   │   └─ Side Slot 2 (#aboutSide2)
-       │   └─ Info Block (.shInfo)
-       │       ├─ Title (.secT)
-       │       ├─ Bio Paragraphs (.shTxt ×2)  [shown to visitors]
-       │       ├─ Closing Quote (.aQuote)
-       │       └─ Edit Textarea (#aEA)         [admin-only]
-       ========================================================= -->
-  <section id="about" style="padding:4rem 0 3rem;">
-    <!-- ── Section Header ── -->
-    <div class="fsHdr">
-      <div class="secT">ABOUT <span class="s">✦</span></div>
-      <div class="secSub">THE ARTIST BEHIND THE WORK</div>
-    </div>
-    <div class="shWrap" style="margin-top:1.5rem;">
-      <div class="shCard" style="grid-template-columns:1fr;">
-        <div class="shInfo">
-          <div class="secT">The Artist <span class="s">✦</span></div>
-          <p class="shTxt" id="aTxt">I'm <strong>KOE</strong> — a digital artist working primarily in <strong>ibisPaint</strong>. I create character illustrations, car designs, landscapes, and original concepts, focusing on detail and pushing each piece further than the last.</p>
-          <p class="shTxt">Art is how I translate ideas into something visible. Every piece is a chance to refine my style, experiment with new approaches, and grow as an artist.</p>
-          <p class="aQuote">"Art has no limit."</p>
-          <!-- Admin textarea: edit and save via the admin bar's SAVE SETTINGS button -->
-          <textarea class="aEA" id="aEA" placeholder="Write your about text here..."></textarea>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- =========================================================
        CONNECT SECTION
        ├─ Section Label (.cDiv .cLbl)
        └─ Social Grid (#socGrid)
@@ -4538,7 +4303,7 @@ body{background:var(--bg);}
 
       <!-- GALLERY -->
       <div class="pfPanel active" id="pfPanelGallery">
-        <div class="pfGrid" id="pfGalleryGrid"></div>
+        <div class="pfGrid pfGridArt" id="pfGalleryGrid"></div>
         <div class="pfEmpty" id="pfGalleryEmpty" style="display:none;">No artwork uploaded yet.</div>
         <div class="pfLoadMoreWrap" id="pfGalleryLoadMoreWrap" style="display:none;">
           <button class="fgLoadMore" onclick="pfLoadMoreGallery()"><span>✦</span> LOAD MORE</button>
@@ -4723,6 +4488,13 @@ body{background:var(--bg);}
            └─ Done Button (.fltDone)
        ========================================================= -->
   <div id="fg" role="dialog" aria-modal="true" aria-label="Full Gallery">
+   <!-- ── Intro — title + subtitle, scrolls away; the search/filter
+        bar below (.fgHdr) stays sticky and is otherwise untouched ── -->
+   <div class="fgIntro">
+    <h2 class="fgTitle">Artworks</h2>
+    <div class="fgTitleRule" aria-hidden="true"><span></span><i>✦</i><span></span></div>
+    <p class="fgSubtitle">Discover exceptional artwork from a global community of artists. Explore illustrations, comics, concept art, digital paintings, and creative projects—all in one place.</p>
+   </div>
    <div class="fgHdr">
     <input class="fgQ" id="fgQ" oninput="renderFG()" placeholder="SEARCH ARTWORK..." type="text"/>
     <div class="fgFil">
@@ -5808,10 +5580,7 @@ body{background:var(--bg);}
     document.getElementById('sBanner').classList.add('show');
   }
 
-  let isAdm = false, upFile = null, images = [], comics = [], cfg = {
-    hero_bg:        'https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/backgrounds/file_00000000a74472309db623dd9eb1a83a.png',
-    hero_bg_mobile: 'https://tmqzqlrpjpydiftlrzmj.supabase.co/storage/v1/object/public/koe-media/backgrounds/file_00000000ad88723095f174a725265f4d.png'
-  };
+  let isAdm = false, upFile = null, images = [], comics = [], cfg = {};
   let filterCat = 'all', filterSrt = 'new', filterGrid = 4;
 
   function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -5832,16 +5601,6 @@ body{background:var(--bg);}
         sb.from('settings').select('*')
       ]);
       images=imgs||[];
-      (sets||[]).forEach(r=>{
-        if(r.key==='hero_bg')cfg.hero_bg=r.value||cfg.hero_bg;
-        if(r.key==='hero_bg_mobile')cfg.hero_bg_mobile=r.value||cfg.hero_bg_mobile;
-        if(r.key==='about_text'){
-          const txt = document.getElementById('aTxt');
-          const ea = document.getElementById('aEA');
-          if(txt) txt.innerHTML = r.value || txt.innerHTML;
-          if(ea) ea.value = r.value || ea.value;
-        }
-      });
     }catch(e){console.error(e);}
 
     /* Site-wide comics — kept separate from the block above so that if
@@ -5860,11 +5619,6 @@ body{background:var(--bg);}
 
   async function saveAll(){
     if(!sb||!isAdm)return;
-    /* About text is the only live-editable setting */
-    await Promise.all([
-      saveSetting('hero_bg',cfg.hero_bg),
-      saveSetting('about_text',document.getElementById('aEA').value)
-    ]);
     showToast('Saved to cloud ✦');
   }
 
@@ -6692,55 +6446,11 @@ body{background:var(--bg);}
   }
 
 
-  async function handleBg(e){
-    const f=e.target.files[0];if(!f||!sb)return;
-    showToast('Uploading…');
-    try{
-      const ext=f.name.split('.').pop();
-      const path=`backgrounds/hero-bg.${ext}`;
-      await sb.storage.from(BUCKET).remove([path]);
-      const{error}=await sb.storage.from(BUCKET).upload(path,f,{cacheControl:'3600',upsert:true});
-      if(error)throw error;
-      const{data:{publicUrl}}=sb.storage.from(BUCKET).getPublicUrl(path);
-      cfg.hero_bg=publicUrl;
-      await saveSetting('hero_bg',publicUrl);
-      applyBg();showToast('Background image updated ✦');
-    }catch(err){showToast('Error: '+err.message);}
-  }
-  async function handleBgMobile(e){
-    const f=e.target.files[0];if(!f||!sb)return;
-    showToast('Uploading mobile image…');
-    try{
-      const ext=f.name.split('.').pop();
-      const path=`backgrounds/hero-bg-mobile.${ext}`;
-      await sb.storage.from(BUCKET).remove([path]);
-      const{error}=await sb.storage.from(BUCKET).upload(path,f,{cacheControl:'3600',upsert:true});
-      if(error)throw error;
-      const{data:{publicUrl}}=sb.storage.from(BUCKET).getPublicUrl(path);
-      cfg.hero_bg_mobile=publicUrl;
-      await saveSetting('hero_bg_mobile',publicUrl);
-      applyBg();showToast('Mobile artwork updated ✶');
-    }catch(err){showToast('Error: '+err.message);}
-  }
-
   /* ── Notification button ── placeholder until the admin broadcast
      system is wired up: opens nothing yet, just confirms the button
      is live. Swap this out once notifications actually exist. */
   function openNotifications(){
     showToast('Notifications — coming soon ✦');
-  }
-
-    function applyBg(){
-    /* Drive the new split-screen hero <img> elements */
-    var imgUrl = cfg.hero_bg || '';
-    var mobUrl = cfg.hero_bg_mobile || imgUrl;
-    var deskEl = document.getElementById('hDesktopImg');
-    var mobEl  = document.getElementById('hMobileImg');
-    if(deskEl && imgUrl) deskEl.src = imgUrl;
-    if(mobEl  && mobUrl) mobEl.src  = mobUrl;
-    /* Legacy stub — keep hBgImg style in sync so any old JS that reads it still works */
-    var legacy = document.getElementById('hBgImg');
-    if(legacy && imgUrl) legacy.style.backgroundImage = "url('" + imgUrl + "')";
   }
 
   function updateUpCatDisplay(){
@@ -7831,10 +7541,9 @@ async function openComments(){
       progress.fonts = 100;
     }
 
-    /* Hero image slice — driven by init() once applyBg() has set the URLs.
-       Expose a callback so init() can hand us the correct device URL after
-       loadDB() resolves. Until then the slice stays at 0 so the bar cannot
-       reach 100% before the real image has loaded. */
+    /* Hero image slice — no hero image exists anymore, so init()
+       resolves this immediately via _heroLoadCb(null). Kept as a
+       generic callback in case a future preload need arises. */
     window._heroLoadCb = function(url){
       if(!url){ progress.img = 100; paint(); return; }
       var pre = new Image();
@@ -7867,14 +7576,11 @@ async function openComments(){
   async function init(){
     spawnPts();
     await loadDB();
-    applyBg();renderHome();
-    /* Hero image preload — feed the correct device URL to the loading bar
-       now that loadDB() has populated cfg. Pick mobile URL on narrow
-       viewports (matches the ≤768px CSS breakpoint), desktop otherwise. */
+    renderHome();
+    /* No hero image to preload anymore — resolve the loading bar's
+       image slice immediately so it isn't stuck waiting on it. */
     if(typeof window._heroLoadCb === 'function'){
-      var _isMob = window.matchMedia('(max-width:768px)').matches;
-      var _heroUrl = _isMob ? (cfg.hero_bg_mobile || cfg.hero_bg || '') : (cfg.hero_bg || '');
-      window._heroLoadCb(_heroUrl || null);
+      window._heroLoadCb(null);
     }
     var m = window.location.pathname.match(/^\/artwork\/([^/]+)\/?$/);
     if(m) openArtworkById(m[1], false);
@@ -7932,9 +7638,9 @@ async function openComments(){
      separated categories are matched against, same as the gallery
      filter elsewhere on the site). */
   var AW_CATEGORY_TABS = {
-    character: 'Character',
-    sketch:    'Sketch',
-    landscape: 'Landscape'
+    character: 'characters',
+    sketch:    'sketches',
+    landscape: 'landscapes'
   };
   var AW_TAB_BTN_IDS = {
     artworks:  'awTabArt',
@@ -8551,7 +8257,7 @@ async function openComments(){
   'use strict';
 
   /* ── Sections in scope ── */
-  var SCOPE_IDS = ['artworks', 'subOverview', 'about', 'connect'];
+  var SCOPE_IDS = ['topSlide', 'artworks', 'subOverview', 'connect'];
 
   /* ── CSS selectors to animate (within scope sections) ── */
   var TARGETS = [
@@ -8563,12 +8269,8 @@ async function openComments(){
     '.awCard',
     /* Subscription overview cards */
     '.subOvCard',
-    /* About card wrapper and its inner pieces */
-    '.shWrap', '.shCard', '.shInfo',
-    /* Text content */
-    '.shTxt', '.aQuote',
     /* Buttons */
-    '.upBtn', '.hCta',
+    '.upBtn',
     /* Empty states */
     '.awEmpty',
     /* Connect section */
@@ -8586,8 +8288,13 @@ async function openComments(){
       var section = document.getElementById(id);
       if (!section) return;
 
-      /* Animate the section wrapper itself */
-      addFuEl(section);
+      /* NOTE: the section wrapper itself is intentionally NOT
+         stamped with .fu-el anymore. Animating the section root
+         made its own background fade from opacity:0, which let
+         the white body background show through as a gap/line
+         above each section until it scrolled into view. Only
+         inner content now animates; the dark section background
+         stays visible at all times, keeping the theme continuous. */
 
       /* Animate all matching children */
       var children = section.querySelectorAll(TARGETS);
@@ -9362,36 +9069,31 @@ window.ZEO_DATA = {
 })();
 </script>
 
-<!-- ── Hero-only floating widgets ─────────────────────────
+<!-- ── Front-page floating widgets ─────────────────────────
      The brand badge, notification button, and Zeo AI button
      are fixed-position with a high z-index, so without this
-     they'd stay pinned on screen through:
-       (a) every in-page section as you scroll (Artworks,
-           Subscriptions, About, Connect, FAQ...), and
-       (b) every full-page overlay panel that slides in
-           (Comic Arts, Profile, Full Gallery, Comments,
-           Subscription plans, Ads) — those panels sit at
-           z-index 500, below the widgets' z-index 1001, so
-           the widgets used to float on top of them too.
-     They should only show while the hero/main section is in
-     view AND no overlay panel is open. ── -->
+     they'd stay pinned on screen through every full-page
+     overlay panel that slides in (Comic Arts, Profile, Full
+     Gallery, Comments, Subscription plans, Ads) — those panels
+     sit at z-index 500, below the widgets' z-index 1001, so
+     the widgets used to float on top of them too.
+     They stay visible for the whole home page (hero through
+     the footer at the bottom) and are hidden only while an
+     overlay panel is open. ── -->
 <script>
 (function () {
   'use strict';
-  var hero = document.getElementById('hero');
-  if (!hero) return;
 
   var widgets = Array.prototype.slice.call(document.querySelectorAll('.fpFloat'));
   var zeoBtn = document.getElementById('zeoBtn');
   if (zeoBtn) widgets.push(zeoBtn);
   if (!widgets.length) return;
 
-  var heroVisible = true;
   var panelOpen = false;
   var wasOut = false;
 
   function apply() {
-    var out = !heroVisible || panelOpen;
+    var out = panelOpen;
     widgets.forEach(function (el) {
       el.classList.toggle('heroOut', out);
     });
@@ -9406,24 +9108,6 @@ window.ZEO_DATA = {
         if (typeof window.zeoResumeBubble === 'function') window.zeoResumeBubble();
       }
     }
-  }
-
-  /* ── Hero visibility (scroll) ── */
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      heroVisible = entries[0].isIntersecting;
-      apply();
-    }, { threshold: 0, rootMargin: '-1px 0px -1px 0px' });
-    io.observe(hero);
-  } else {
-    var check = function () {
-      var r = hero.getBoundingClientRect();
-      heroVisible = !(r.bottom <= 0 || r.top >= window.innerHeight);
-      apply();
-    };
-    window.addEventListener('scroll', check, { passive: true });
-    window.addEventListener('resize', check);
-    check();
   }
 
   /* ── Full-page overlay panels — hide widgets whenever any of
