@@ -4340,38 +4340,201 @@ body{background:var(--bg);}
   </div>
 
   <!-- =========================================================
-       PROFILE UPLOAD MODALS — separate from the admin-only
-       #upMod above. These always insert with user_id = the
-       signed-in user's own id (enforced by RLS too), and never
-       expose edit/delete. Comic uploads support multiple page
-       images in addition to a cover.
+       PROFILE UPLOAD POPUP — shared by "Upload Artwork" and
+       "Upload Comic" (mode toggled via openPfUpload('art'|'comic')).
+       Always inserts with user_id = the signed-in user's own id
+       (enforced by RLS too). No visibility control by design —
+       everything uploaded here is public, same as the gallery.
+       Fixed-size popup card; only the body between the sticky
+       header and sticky footer scrolls. z-index is intentionally
+       far above the bottom nav (#bnNav, 1000), the top-row widgets
+       (.fpFloat/#zeoBtn, 1001) and every other overlay (max 9500)
+       so it always renders on top, on any device.
        ========================================================= -->
-  <div class="mOvr" id="pfUpMod">
-   <div class="modal">
-    <button class="mX" onclick="closePfUpload()">✕</button>
-    <h2 id="pfUpTitle">UPLOAD ART</h2>
-    <p id="pfUpSubtitle">Add a new piece to your gallery. Supports JPG, PNG, WEBP, GIF.</p>
-    <input id="pfUpEditId" type="hidden" value=""/>
-    <div class="dz" id="pfDz">
-     <input accept="image/*" id="pfUpF" onchange="handlePfFile(event)" type="file"/>
-     <div class="dzIco">🖼</div>
-     <div class="dzTxt" id="pfDzTxt">DROP IMAGE HERE OR CLICK TO BROWSE</div>
-    </div>
-    <img alt="preview" class="upPrev" id="pfUpPrev" src=""/>
-    <input class="mIn" id="pfUpNm" placeholder="TITLE" type="text"/>
-    <textarea class="mIn" id="pfUpDesc" placeholder="DESCRIPTION (OPTIONAL)" rows="3" style="resize:vertical;min-height:4.5rem;font-family:var(--fb);line-height:1.5;"></textarea>
-    <input class="mIn" id="pfUpTags" placeholder="TAGS (COMMA SEPARATED)" type="text"/>
-    <!-- Comic-only: additional page images -->
-    <div id="pfComicPagesWrap" style="display:none;">
-      <div class="dz" id="pfDzPages">
-       <input accept="image/*" id="pfUpPages" multiple="" onchange="handlePfPagesFile(event)" type="file"/>
-       <div class="dzIco">📖</div>
-       <div class="dzTxt">DROP PAGE IMAGES HERE OR CLICK TO BROWSE (MULTIPLE)</div>
+  <style>
+    .upPop{position:fixed;inset:0;z-index:20000;background:rgba(5,3,8,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:.9rem;opacity:0;pointer-events:none;transition:opacity .25s ease;}
+    .upPop.open{opacity:1;pointer-events:auto;}
+    .upPopBox{background:#0c0c15;border:1px solid rgba(139,92,246,.28);border-radius:16px;width:100%;max-width:960px;max-height:min(90vh,780px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.6);font-family:var(--fb);}
+    .upPopHead{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.2rem 1.3rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+    .upPopHead h2{font-size:1.25rem;font-weight:800;color:#f5f4fb;margin-bottom:.25rem;letter-spacing:.01em;}
+    .upPopHead p{font-size:.82rem;color:rgba(214,212,232,.58);line-height:1.4;}
+    .upPopX{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#d6d4e8;width:32px;height:32px;border-radius:8px;cursor:pointer;flex-shrink:0;font-size:.85rem;line-height:1;transition:background .2s,color .2s;}
+    .upPopX:hover{background:rgba(139,92,246,.2);color:#fff;}
+    .upPopBody{overflow-y:auto;padding:1.3rem;display:grid;grid-template-columns:1fr;gap:1.3rem;}
+    @media(min-width:860px){.upPopBody{grid-template-columns:1.7fr 1fr;align-items:start;}}
+    .upPopFoot{display:flex;justify-content:flex-end;gap:.65rem;padding:.9rem 1.3rem;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:#0c0c15;}
+    @media(max-width:519px){.upPopFoot{flex-direction:column-reverse;}.upPopFoot button{width:100%;}}
+
+    .upDz{border:2px dashed rgba(139,92,246,.35);border-radius:12px;padding:2rem 1.1rem;text-align:center;cursor:pointer;position:relative;transition:border-color .25s,background .25s;background:rgba(139,92,246,.035);margin-bottom:1rem;}
+    .upDz.over,.upDz:hover{border-color:#8b5cf6;background:rgba(139,92,246,.08);}
+    .upDz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .upDzIco{width:50px;height:50px;margin:0 auto .75rem;border-radius:12px;background:rgba(139,92,246,.16);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#b9a3fb;}
+    .upDzTitle{font-weight:700;color:#f5f4fb;margin-bottom:.25rem;font-size:.92rem;}
+    .upDzSub{color:rgba(214,212,232,.55);font-size:.8rem;margin-bottom:.55rem;}
+    .upDzHint{color:rgba(214,212,232,.4);font-size:.72rem;margin-bottom:1rem;}
+    .upDzBtn{background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;color:#fff;padding:.6rem 1.2rem;border-radius:8px;font-size:.8rem;font-weight:700;pointer-events:none;}
+    .upDzSm{padding:1.2rem 1rem;margin-bottom:.6rem;}
+    .upPopBody .upPrev{width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08);margin-bottom:1rem;}
+    .upPagesPreview{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
+    .upPagesPreview img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1);}
+
+    .upField{margin-bottom:1rem;}
+    .upLbl{display:block;font-size:.78rem;font-weight:700;color:#e5e3f5;margin-bottom:.4rem;letter-spacing:.02em;}
+    .upReq{color:#f87171;}
+    .upInWrap{position:relative;}
+    .upIn{width:100%;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#f5f4fb;padding:.68rem 3.3rem .68rem .85rem;font-size:.86rem;font-family:var(--fb);outline:none;transition:border-color .2s;}
+    .upIn:focus{border-color:#8b5cf6;}
+    .upArea{resize:vertical;min-height:4.5rem;line-height:1.5;padding-right:.85rem;}
+    .upInWrapArea .upCount{top:auto;bottom:.5rem;}
+    .upCount{position:absolute;right:.75rem;top:.72rem;font-size:.68rem;color:rgba(214,212,232,.4);pointer-events:none;}
+    .upRow2{display:grid;grid-template-columns:1fr;gap:1rem;}
+    @media(min-width:600px){.upRow2{grid-template-columns:1fr 1fr;}}
+
+    .upCatDd{position:relative;}
+    .upCatTrigger{width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#f5f4fb;padding:.68rem .85rem;font-size:.84rem;cursor:pointer;font-family:var(--fb);text-align:left;}
+    .upCatDd.open .upCatTrigger{border-color:#8b5cf6;}
+    .upChev{color:rgba(214,212,232,.5);transition:transform .2s;flex-shrink:0;margin-left:.5rem;}
+    .upCatDd.open .upChev{transform:rotate(180deg);}
+    .upCatPanel{position:absolute;top:calc(100% + .4rem);left:0;right:0;background:#16161f;border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:.5rem;display:none;flex-direction:column;gap:.15rem;z-index:5;box-shadow:0 10px 26px rgba(0,0,0,.45);max-height:210px;overflow-y:auto;}
+    .upCatDd.open .upCatPanel{display:flex;}
+    .upCatOpt{display:flex;align-items:center;gap:.55rem;font-size:.82rem;color:#d6d4e8;cursor:pointer;padding:.4rem .5rem;border-radius:6px;}
+    .upCatOpt:hover{background:rgba(139,92,246,.12);}
+    .upCatOpt input{accent-color:#8b5cf6;cursor:pointer;}
+
+    .upTagBox{min-height:2.65rem;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.35rem .55rem;display:flex;flex-wrap:wrap;align-items:center;gap:.32rem;cursor:text;}
+    .upTagBox:focus-within{border-color:#8b5cf6;}
+    .upTagChip{display:inline-flex;align-items:center;gap:.28rem;background:rgba(139,92,246,.16);border:1px solid rgba(139,92,246,.35);color:#c9b8fd;font-size:.74rem;padding:.22rem .5rem;border-radius:999px;white-space:nowrap;}
+    .upTagChip button{background:none;border:none;color:#c9b8fd;cursor:pointer;font-size:.72rem;line-height:1;padding:0;}
+    .upTagInput{flex:1;min-width:70px;background:none;border:none;outline:none;color:#f5f4fb;font-size:.82rem;padding:.28rem .1rem;font-family:var(--fb);}
+
+    .upSide{display:flex;flex-direction:column;gap:1rem;}
+    .upSideCard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1rem;}
+    .upSideCard h3{font-size:.82rem;font-weight:700;color:#f5f4fb;margin-bottom:.7rem;}
+    .upGuideList,.upTipList{list-style:none;}
+    .upGuideList{display:flex;flex-direction:column;gap:.7rem;}
+    .upGuideList li{display:flex;gap:.6rem;font-size:.77rem;color:rgba(214,212,232,.62);align-items:flex-start;}
+    .upGuideList li strong{display:block;color:#e5e3f5;font-size:.79rem;margin-bottom:.1rem;}
+    .upGIco{flex-shrink:0;width:26px;height:26px;border-radius:6px;background:rgba(139,92,246,.14);display:flex;align-items:center;justify-content:center;font-size:.82rem;}
+    .upTipList{display:flex;flex-direction:column;gap:.55rem;font-size:.78rem;color:rgba(214,212,232,.68);}
+    .upTipList li{display:flex;gap:.45rem;align-items:flex-start;}
+    .upTipList li::before{content:'✓';color:#8b5cf6;font-weight:700;flex-shrink:0;}
+
+    .upBtnSec{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#d6d4e8;padding:.68rem 1.25rem;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;transition:background .2s;}
+    .upBtnSec:hover{background:rgba(255,255,255,.09);}
+    .upBtnPri{background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;color:#fff;padding:.68rem 1.35rem;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(139,92,246,.35);transition:filter .2s;}
+    .upBtnPri:hover{filter:brightness(1.08);}
+    .upBtnPri:disabled{opacity:.6;cursor:not-allowed;filter:none;}
+
+    @media(max-width:519px){
+      .upPopHead{padding:1rem 1rem;}
+      .upPopHead h2{font-size:1.1rem;}
+      .upPopBody{padding:1rem;}
+      .upPopFoot{padding:.8rem 1rem;}
+    }
+  </style>
+  <div class="upPop" id="pfUpMod">
+   <div class="upPopBox">
+    <div class="upPopHead">
+      <div>
+        <h2 id="pfUpTitle">Upload Artwork</h2>
+        <p id="pfUpSubtitle">Share your creativity with artists around the world.</p>
       </div>
-      <div id="pfPagesPreview" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem;"></div>
+      <button class="upPopX" onclick="closePfUpload()" aria-label="Close">✕</button>
     </div>
-    <button class="mBtn" id="pfUpBtn" onclick="doPfUp()">UPLOAD ✦</button>
-    <button class="mBtn sec" onclick="closePfUpload()">CANCEL</button>
+    <div class="upPopBody">
+     <div class="upMain">
+      <input id="pfUpEditId" type="hidden" value=""/>
+      <div class="upDz" id="pfDz">
+       <input accept="image/*" id="pfUpF" onchange="handlePfFile(event)" type="file"/>
+       <div class="upDzIco">⬆</div>
+       <div class="upDzTitle" id="pfDzTxt">Drag &amp; drop your artwork here</div>
+       <div class="upDzSub">or click to browse files</div>
+       <div class="upDzHint">JPG, PNG, WEBP, GIF up to 20MB</div>
+       <button type="button" class="upDzBtn" tabindex="-1">📁 Choose Files</button>
+      </div>
+      <img alt="preview" class="upPrev" id="pfUpPrev" src=""/>
+
+      <!-- Comic-only: additional page images -->
+      <div id="pfComicPagesWrap" style="display:none;">
+        <div class="upDz upDzSm" id="pfDzPages">
+         <input accept="image/*" id="pfUpPages" multiple="" onchange="handlePfPagesFile(event)" type="file"/>
+         <div class="upDzIco">📖</div>
+         <div class="upDzTitle">Drop page images here or click to browse</div>
+         <div class="upDzSub">Multiple pages supported</div>
+        </div>
+        <div id="pfPagesPreview" class="upPagesPreview"></div>
+      </div>
+
+      <div class="upField">
+        <label class="upLbl" for="pfUpNm">Title <span class="upReq">*</span></label>
+        <div class="upInWrap">
+          <input class="upIn" id="pfUpNm" maxlength="100" oninput="pfUpdateCount('pfUpNm','pfUpNmCount',100)" placeholder="Give your artwork a title…" type="text"/>
+          <span class="upCount" id="pfUpNmCount">0/100</span>
+        </div>
+      </div>
+
+      <div class="upField">
+        <label class="upLbl" for="pfUpDesc">Description</label>
+        <div class="upInWrap upInWrapArea">
+          <textarea class="upIn upArea" id="pfUpDesc" maxlength="1000" oninput="pfUpdateCount('pfUpDesc','pfUpDescCount',1000)" placeholder="Tell the story behind your artwork…" rows="3"></textarea>
+          <span class="upCount" id="pfUpDescCount">0/1000</span>
+        </div>
+      </div>
+
+      <div class="upRow2">
+        <div class="upField" id="pfUpCatField">
+          <label class="upLbl">Category <span class="upReq">*</span></label>
+          <div class="upCatDd" id="pfUpCatDd">
+            <button type="button" class="upCatTrigger" onclick="togglePfCatDd(event)" id="pfUpCatTrigger">
+              <span id="pfUpCatTriggerLbl">Others</span><span class="upChev">⌄</span>
+            </button>
+            <div class="upCatPanel" id="pfUpCatPanel">
+              <label class="upCatOpt"><input checked="" id="pfUpCat_others" onchange="updatePfCatDisplay()" type="checkbox" value="others"/> Others</label>
+              <label class="upCatOpt"><input id="pfUpCat_cars" onchange="updatePfCatDisplay()" type="checkbox" value="cars"/> Cars</label>
+              <label class="upCatOpt"><input id="pfUpCat_characters" onchange="updatePfCatDisplay()" type="checkbox" value="characters"/> Characters</label>
+              <label class="upCatOpt"><input id="pfUpCat_landscapes" onchange="updatePfCatDisplay()" type="checkbox" value="landscapes"/> Landscapes</label>
+              <label class="upCatOpt"><input id="pfUpCat_sketches" onchange="updatePfCatDisplay()" type="checkbox" value="sketches"/> Sketches</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="upField">
+          <label class="upLbl" for="pfUpTagsInput">Tags</label>
+          <div class="upTagBox" id="pfUpTagBox" onclick="document.getElementById('pfUpTagsInput').focus()">
+            <span id="pfUpTagChips"></span>
+            <input class="upTagInput" id="pfUpTagsInput" onkeydown="pfTagKeydown(event)" placeholder="Add up to 10 tags…" type="text"/>
+          </div>
+          <input id="pfUpTags" type="hidden" value=""/>
+        </div>
+      </div>
+     </div>
+
+     <div class="upSide">
+       <div class="upSideCard">
+         <h3>Upload Guidelines</h3>
+         <ul class="upGuideList">
+           <li><span class="upGIco">🖼</span><div><strong>Original work only</strong>Make sure you own the rights.</div></li>
+           <li><span class="upGIco">✦</span><div><strong>High quality recommended</strong>Best results with high resolution files.</div></li>
+           <li><span class="upGIco">🛡</span><div><strong>Appropriate content</strong>No offensive, hateful or explicit content.</div></li>
+           <li><span class="upGIco">❤</span><div><strong>Give proper credit</strong>Credit references if inspired by others.</div></li>
+         </ul>
+       </div>
+       <div class="upSideCard">
+         <h3>Tips for better visibility</h3>
+         <ul class="upTipList">
+           <li>Use a clear and attractive thumbnail</li>
+           <li>Add a relevant title and description</li>
+           <li>Choose the right category</li>
+           <li>Use relevant tags</li>
+         </ul>
+       </div>
+     </div>
+    </div>
+
+    <div class="upPopFoot">
+      <button class="upBtnSec" onclick="closePfUpload()">Cancel</button>
+      <button class="upBtnPri" id="pfUpBtn" onclick="doPfUp()">📤 Upload Artwork</button>
+    </div>
    </div>
   </div>
 
@@ -5584,6 +5747,15 @@ body{background:var(--bg);}
   let filterCat = 'all', filterSrt = 'new', filterGrid = 4;
 
   function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+  /* Normalizes the `category` column into a clean array of lowercase-
+     trimmed strings, whether it comes back from Supabase as a real
+     text[] array (current schema) or a legacy comma-joined string
+     (pre-migration rows) — every read of art.category should go
+     through this instead of calling .split(',') directly. */
+  function catList(val){
+    if(Array.isArray(val)) return val.map(function(c){return String(c).trim();}).filter(Boolean);
+    return String(val||'').split(',').map(function(c){return c.trim();}).filter(Boolean);
+  }
   function restoreScroll(){
     var locks=['fg','artModal','communityPage','adsPanel','legalBackdrop','subPage','comicArtsPage','profilePage','authMod'];
     var anyOpen=locks.some(function(id){
@@ -5640,7 +5812,7 @@ body{background:var(--bg);}
   function itemHTML(img){
     const thumbSrc=getThumbnailUrl(esc(img.image_url));
     const fullSrc=esc(img.image_url);
-    const cats=(img.category||'others').split(',').map(c=>c.trim()).filter(Boolean);
+    const cats=catList(img.category).length?catList(img.category):['others'];
     const extraCats=cats.slice(1);
     const moreBadge=extraCats.length?`<span class="cBadgeMore" tabindex="0" role="text" aria-label="Also tagged: ${esc(extraCats.join(', '))}" title="${esc(extraCats.join(', '))}">+${extraCats.length}</span>`:'';
     const idStr=esc(String(img.id));
@@ -5696,7 +5868,7 @@ body{background:var(--bg);}
     const q=document.getElementById('fgQ').value.toLowerCase().trim();
     const c=document.getElementById('fgC');
     let imgs=[...images];
-    if(filterCat!=='all')imgs=imgs.filter(i=>(i.category||'others').split(',').map(s=>s.trim()).includes(filterCat));
+    if(filterCat!=='all')imgs=imgs.filter(i=>(catList(i.category).length?catList(i.category):['others']).includes(filterCat));
     if(q)imgs=imgs.filter(i=>i.name.toLowerCase().includes(q));
     /* ── FIXED sort: guard against null timestamps; id tie-breaker for
        deterministic ordering when two items share the same created_at.
@@ -5891,7 +6063,7 @@ body{background:var(--bg);}
   function openArtworkById(id,pushUrl){
     var art = findArtworkById(id);
     if(!art) return false;
-    var cats=(art.category||'others').split(',').map(function(c){return c.trim();}).filter(Boolean);
+    var cats=catList(art.category).length?catList(art.category):['others'];
     openLB(art.image_url, art.name, cats[0]||'', art.description||'', String(art.id), pushUrl);
     return true;
   }
@@ -5908,7 +6080,7 @@ body{background:var(--bg);}
     var title = (art.name||'Untitled artwork') + ' — ' + SITE_NAME;
     var desc = (art.description && art.description.trim())
       ? art.description.trim().slice(0,300)
-      : ('View "'+(art.name||'this artwork')+'"'+(art.category?(' in the '+art.category+' collection'):'')+' on '+SITE_NAME+', a digital art showcase by KOE.');
+      : ('View "'+(art.name||'this artwork')+'"'+(catList(art.category).length?(' in the '+catList(art.category).join(', ')+' collection'):'')+' on '+SITE_NAME+', a digital art showcase by KOE.');
     var url = SITE_URL + '/artwork/' + art.id;
     document.title = title;
     setMeta('meta[name="description"]','content',desc);
@@ -5994,7 +6166,7 @@ body{background:var(--bg);}
     var prev = document.getElementById('upPrev');
     prev.src = art.image_url||'';
     prev.style.display = art.image_url ? 'block' : 'none';
-    var cats=(art.category||'others').split(',').map(function(c){return c.trim();}).filter(Boolean);
+    var cats=catList(art.category).length?catList(art.category):['others'];
     document.querySelectorAll('#upCatBoxes input[type=checkbox]').forEach(function(cb){
       cb.checked = cats.indexOf(cb.value) !== -1;
     });
@@ -6497,7 +6669,7 @@ body{background:var(--bg);}
     const nm=document.getElementById('upNm').value.trim();
     const desc=document.getElementById('upDesc').value.trim(); // optional — sent as null when empty, never breaks older rows
     const cats=[...document.querySelectorAll('#upCatBoxes input[type=checkbox]:checked')].map(cb=>cb.value);
-    const cat=cats.length?cats.join(','):'others';
+    const cat=cats.length?cats:['others'];
     if(!nm){showToast('Enter a name');return;}
     if(!editId && !upFile){showToast('Select an image');return;}
     const btn=document.getElementById('upBtn');
@@ -6679,7 +6851,7 @@ body{background:var(--bg);}
     document.getElementById('pfGalleryLoadMoreWrap').style.display = pf.galleryDone ? 'none' : '';
   }
   function pfGalleryCardHTML(a){
-    var tags = (a.tags && a.tags.length) ? a.tags : (a.category||'').split(',').map(function(c){return c.trim();}).filter(Boolean);
+    var tags = (a.tags && a.tags.length) ? a.tags : catList(a.category);
     var adminRow = isDev ? (
       '<div class="pfCardAdmin" onclick="event.stopPropagation()">'+
       '<button onclick="openEditArt(\''+a.id+'\',event)">EDIT</button>'+
@@ -6698,7 +6870,7 @@ body{background:var(--bg);}
   function pfOpenArtwork(id){
     var art = findArtworkById(id);
     if(!art) return;
-    var cats=(art.category||(art.tags||[]).join(',')||'others').split(',').map(function(c){return c.trim();}).filter(Boolean);
+    var cats=catList(art.category).length?catList(art.category):(catList(art.tags).length?catList(art.tags):['others']);
     openLB(art.image_url, art.name, cats[0]||'', art.description||'', String(art.id));
   }
 
@@ -6758,13 +6930,15 @@ body{background:var(--bg);}
     if(!c){ showToast('Comic not found'); return; }
     openPfUpload('comic');
     document.getElementById('pfUpEditId').value = String(c.id);
-    document.getElementById('pfUpTitle').textContent = 'EDIT COMIC';
+    document.getElementById('pfUpTitle').textContent = 'Edit Comic';
     document.getElementById('pfUpNm').value = c.title||'';
     document.getElementById('pfUpDesc').value = c.description||'';
-    document.getElementById('pfUpTags').value = (c.tags||[]).join(', ');
+    pfUpdateCount('pfUpNm','pfUpNmCount',100);
+    pfUpdateCount('pfUpDesc','pfUpDescCount',1000);
+    pfSetTagsFromArray(c.tags||[]);
     document.getElementById('pfDz').style.display='none';
     document.getElementById('pfComicPagesWrap').style.display='none';
-    document.getElementById('pfUpBtn').textContent='SAVE CHANGES ✦';
+    document.getElementById('pfUpBtn').textContent='📤 Save Changes';
   }
 
   /* ── Minimal comic viewer (#comicModal injected on demand) ── */
@@ -6875,7 +7049,78 @@ body{background:var(--bg);}
     }catch(e){ showToast('Error: '+e.message); }
   }
 
-  /* ── UPLOAD MODAL (art + comic, own-profile only) ── */
+  /* ── UPLOAD POPUP (art + comic, own-profile only) ── */
+  pf.upCats = ['others'];
+  pf.upTags = [];
+
+  function pfUpdateCount(inputId,countId,max){
+    var v = document.getElementById(inputId).value.length;
+    document.getElementById(countId).textContent = v+'/'+max;
+  }
+
+  /* ── Category multi-select dropdown (same options as the gallery) ── */
+  function togglePfCatDd(e){
+    if(e) e.stopPropagation();
+    document.getElementById('pfUpCatDd').classList.toggle('open');
+  }
+  function closePfCatDd(){
+    document.getElementById('pfUpCatDd').classList.remove('open');
+  }
+  var PF_CATS = ['others','cars','characters','landscapes','sketches'];
+  function updatePfCatDisplay(){
+    var checked = PF_CATS.filter(function(c){ return document.getElementById('pfUpCat_'+c).checked; });
+    if(!checked.length){ checked=['others']; document.getElementById('pfUpCat_others').checked = true; }
+    pf.upCats = checked;
+    var lbl = checked.map(function(c){ return c.charAt(0).toUpperCase()+c.slice(1); }).join(', ');
+    document.getElementById('pfUpCatTriggerLbl').textContent = lbl;
+  }
+  function pfSetCats(cats){
+    var list = (cats && cats.length) ? cats : ['others'];
+    PF_CATS.forEach(function(c){ document.getElementById('pfUpCat_'+c).checked = list.indexOf(c)!==-1; });
+    updatePfCatDisplay();
+  }
+  document.addEventListener('click',function(e){
+    var dd = document.getElementById('pfUpCatDd');
+    if(dd && dd.classList.contains('open') && !dd.contains(e.target)) closePfCatDd();
+  });
+
+  /* ── Tags — YouTube-style chip input (type, press Enter/comma to add) ── */
+  function pfRenderTagChips(){
+    var host = document.getElementById('pfUpTagChips');
+    host.innerHTML = pf.upTags.map(function(t,i){
+      return '<span class="upTagChip">'+esc(t)+'<button type="button" onclick="pfRemoveTag('+i+',event)" aria-label="Remove tag">✕</button></span>';
+    }).join('');
+    document.getElementById('pfUpTags').value = pf.upTags.join(',');
+  }
+  function pfAddTag(raw){
+    var t = (raw||'').trim();
+    if(!t) return;
+    if(pf.upTags.length>=10){ showToast('Up to 10 tags allowed'); return; }
+    if(pf.upTags.some(function(x){return x.toLowerCase()===t.toLowerCase();})) return;
+    pf.upTags.push(t);
+    pfRenderTagChips();
+  }
+  function pfRemoveTag(i,e){
+    if(e) e.stopPropagation();
+    pf.upTags.splice(i,1);
+    pfRenderTagChips();
+  }
+  function pfSetTagsFromArray(arr){
+    pf.upTags = (arr||[]).slice(0,10);
+    pfRenderTagChips();
+  }
+  function pfTagKeydown(e){
+    var input = e.target;
+    if(e.key==='Enter' || e.key===','){
+      e.preventDefault();
+      pfAddTag(input.value);
+      input.value='';
+    } else if(e.key==='Backspace' && !input.value && pf.upTags.length){
+      pf.upTags.pop();
+      pfRenderTagChips();
+    }
+  }
+
   function openPfUpload(mode){
     if(!currentUser){ showToast('Sign in to upload'); openAuthMod(); return; }
     if(!pf.isOwner){ showToast('You can only upload to your own profile'); return; }
@@ -6883,23 +7128,29 @@ body{background:var(--bg);}
     pf.upFile = null;
     pf.upPageFiles = [];
     document.getElementById('pfUpEditId').value = '';
-    document.getElementById('pfUpTitle').textContent = mode==='comic' ? 'UPLOAD COMIC' : 'UPLOAD ART';
+    document.getElementById('pfUpTitle').textContent = mode==='comic' ? 'Upload Comic' : 'Upload Artwork';
     document.getElementById('pfUpSubtitle').textContent = mode==='comic'
       ? 'Add a new comic to your profile. Cover + page images, JPG/PNG/WEBP/GIF.'
-      : 'Add a new piece to your gallery. Supports JPG, PNG, WEBP, GIF.';
-    document.getElementById('pfDzTxt').textContent = mode==='comic' ? 'DROP COVER IMAGE HERE OR CLICK TO BROWSE' : 'DROP IMAGE HERE OR CLICK TO BROWSE';
+      : 'Share your creativity with artists around the world.';
+    document.getElementById('pfDzTxt').textContent = mode==='comic' ? 'Drag & drop your cover image here' : 'Drag & drop your artwork here';
+    document.getElementById('pfUpCatField').style.display = mode==='comic' ? 'none' : '';
     document.getElementById('pfComicPagesWrap').style.display = mode==='comic' ? '' : 'none';
     document.getElementById('pfDz').style.display='';
     document.getElementById('pfUpNm').value='';
     document.getElementById('pfUpDesc').value='';
-    document.getElementById('pfUpTags').value='';
+    pfUpdateCount('pfUpNm','pfUpNmCount',100);
+    pfUpdateCount('pfUpDesc','pfUpDescCount',1000);
+    pfSetTagsFromArray([]);
+    pfSetCats(['others']);
+    closePfCatDd();
     document.getElementById('pfUpPrev').style.display='none';
     document.getElementById('pfPagesPreview').innerHTML='';
-    document.getElementById('pfUpBtn').textContent='UPLOAD ✦';
+    document.getElementById('pfUpBtn').textContent = mode==='comic' ? '📤 Upload Comic' : '📤 Upload Artwork';
     document.getElementById('pfUpMod').classList.add('open');
   }
   function closePfUpload(){
     document.getElementById('pfUpMod').classList.remove('open');
+    closePfCatDd();
     pf.upFile = null; pf.upPageFiles = [];
   }
   function handlePfFile(e){
@@ -6909,7 +7160,10 @@ body{background:var(--bg);}
     r.onload = function(ev){
       var p = document.getElementById('pfUpPrev');
       p.src = ev.target.result; p.style.display='block';
-      if(!document.getElementById('pfUpNm').value.trim()) document.getElementById('pfUpNm').value = f.name.replace(/\.[^.]+$/,'');
+      if(!document.getElementById('pfUpNm').value.trim()){
+        document.getElementById('pfUpNm').value = f.name.replace(/\.[^.]+$/,'');
+        pfUpdateCount('pfUpNm','pfUpNmCount',100);
+      }
     };
     r.readAsDataURL(f);
   }
@@ -6922,7 +7176,6 @@ body{background:var(--bg);}
       r.onload = function(ev){
         var img = document.createElement('img');
         img.src = ev.target.result;
-        img.style.cssText='width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid var(--bdr);';
         wrap.appendChild(img);
       };
       r.readAsDataURL(f);
@@ -6952,7 +7205,7 @@ body{background:var(--bg);}
           /* Edit is dev-only in practice (RLS blocks non-dev updates);
              button is only reachable here via openEditArt's own gate. */
           btn.textContent='SAVING…';
-          const{error}=await sb.from('artworks').update({name:nm,description:desc||null,tags:tags,category:tags.join(',')||'others'}).eq('id',editId);
+          const{error}=await sb.from('artworks').update({name:nm,description:desc||null,tags:tags,category:pf.upCats.length?pf.upCats:['others']}).eq('id',editId);
           if(error) throw error;
           var idx = images.findIndex(function(i){return String(i.id)===String(editId);});
           if(idx!==-1){ images[idx].name=nm; images[idx].description=desc; images[idx].tags=tags; }
@@ -6965,7 +7218,7 @@ body{background:var(--bg);}
           const{error:ue}=await sb.storage.from(BUCKET).upload(path,pf.upFile,{cacheControl:'3600'});
           if(ue) throw ue;
           const{data:{publicUrl}}=sb.storage.from(BUCKET).getPublicUrl(path);
-          const{data:rows,error:de}=await sb.from('artworks').insert({name:nm,description:desc||null,tags:tags,category:tags.join(',')||'others',image_url:publicUrl,storage_path:path,user_id:currentUser.id}).select();
+          const{data:rows,error:de}=await sb.from('artworks').insert({name:nm,description:desc||null,tags:tags,category:pf.upCats.length?pf.upCats:['others'],image_url:publicUrl,storage_path:path,user_id:currentUser.id}).select();
           if(de) throw de;
           images.unshift(rows[0]);
           pf.galleryRows.unshift(rows[0]);
@@ -7009,12 +7262,12 @@ body{background:var(--bg);}
         }
       }
     }catch(err){ showToast('Error: '+err.message); }
-    finally{ btn.disabled=false; btn.textContent = editId ? 'SAVE CHANGES ✦' : 'UPLOAD ✦'; }
+    finally{ btn.disabled=false; btn.textContent = editId ? '📤 Save Changes' : (pf.upMode==='comic' ? '📤 Upload Comic' : '📤 Upload Artwork'); }
   }
 
   let tT;
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3000);}
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();closeAuthMod();closeCommunityPage();closePfMenu();closePfUploadMenu();closeSubscription();closeSubModal();closeComicArts();closeProfilePage();
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeFG();closeMenu();closeFilterPanel();closeAuthMod();closeCommunityPage();closePfMenu();closePfUploadMenu();closeSubscription();closeSubModal();closeComicArts();closeProfilePage();closePfUpload();
   }});
 
   /* ── BOTTOM NAVIGATION ──────────────────────────────────
@@ -7652,7 +7905,7 @@ async function openComments(){
 
   function awCategoryList(catName){
     return awArtworksCache.filter(function(item){
-      return (item.category || '').split(',').map(function(c){ return c.trim().toLowerCase(); }).indexOf(catName.toLowerCase()) !== -1;
+      return catList(item.category).map(function(c){ return c.toLowerCase(); }).indexOf(catName.toLowerCase()) !== -1;
     });
   }
 
@@ -7706,7 +7959,7 @@ async function openComments(){
     var isComic = type === 'comicarts';
     var fullSrc = isComic ? (item.cover_image_url || '') : (item.image_url || '');
     var name    = isComic ? (item.title || 'Untitled') : (item.name || 'Untitled');
-    var cat     = isComic ? 'comic' : (item.category || 'others').split(',')[0].trim();
+    var cat     = isComic ? 'comic' : (catList(item.category)[0] || 'others');
     var desc    = item.description || '';
     var id      = item.id;
 
@@ -9113,7 +9366,7 @@ window.ZEO_DATA = {
   /* ── Full-page overlay panels — hide widgets whenever any of
      these slide-in pages is open, since they otherwise float
      above the panel's lower z-index. ── */
-  var OVERLAY_IDS = ['comicArtsPage', 'profilePage', 'fg', 'communityPage', 'subPage', 'adsPanel', 'authMod'];
+  var OVERLAY_IDS = ['comicArtsPage', 'profilePage', 'fg', 'communityPage', 'subPage', 'adsPanel', 'authMod', 'pfUpMod', 'upMod'];
   var overlayEls = OVERLAY_IDS
     .map(function (id) { return document.getElementById(id); })
     .filter(Boolean);
